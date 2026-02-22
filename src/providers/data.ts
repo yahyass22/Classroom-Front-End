@@ -1,6 +1,6 @@
 
 import { MOCK_SUBJECTS } from '../constants/mockData';
-console.log(MOCK_SUBJECTS);
+
 import {BaseRecord, DataProvider, GetListParams, GetListResponse} from "@refinedev/core";
 
 

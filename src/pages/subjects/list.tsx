@@ -25,11 +25,11 @@ const SubjectsList = () => {
     ]: [];
     const subjectTable= useTable<Subject>({
      columns:useMemo<ColumnDef<Subject>[]>(()=>[
-            {
-            id: 'Code', accessorKey: 'Code', size: 100,
-            header: ()=> <p className="column-title ml-2">Code</p>,
-            cell: ({getValue}) => <Badge>{getValue<string>()}</Badge>
-        },
+         {
+             id: 'code', accessorKey: 'code', size: 100,
+             header: ()=> <p className="column-title ml-2">Code</p>,
+             cell: ({getValue}) => <Badge>{getValue<string>()}</Badge>
+         },
             {
                 id: 'name', accessorKey: 'name', size: 200,
                 header: ()=> <p className='column-title'>Name</p>,
@@ -68,7 +68,7 @@ const SubjectsList = () => {
     return (
         <ListView>
             <Breadcrumb/>
-            <h1 className="page-titles">Subjects</h1>
+            <h1 className="page-title">Subjects</h1>
 
                 <div className="intro-row">
                 <p> Quick Access to essential Metrics and Management tools.</p>
