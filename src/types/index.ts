@@ -4,12 +4,7 @@ export type Subject = {
     code: string;
     description: string;
     departmentId: number;
-    department: {
-        id: number;
-        name: string;
-        code: string;
-        description: string;
-    } | null;
+    department: Department | null;
     createdAt?: string;
     updatedAt?: string;
 };
@@ -98,6 +93,7 @@ export type Schedule = {
 
 export type Department = {
     id: number;
+    code: string;
     name: string;
     description: string;
 };

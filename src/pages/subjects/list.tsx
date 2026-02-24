@@ -15,10 +15,10 @@ import {Badge} from "@/components/ui/badge.tsx";
 
 const SubjectsList = () => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDepartement, setSelectedDepartement] = useState('all');
+    const [selecteddepartment, setSelecteddepartment] = useState('all');
 
-    const departmentFilters = selectedDepartement === 'all' ? [] : [
-        { field: 'department.name', operator: 'eq' as const, value: selectedDepartement }
+    const departmentFilters = selecteddepartment === 'all' ? [] : [
+        { field: 'department.name', operator: 'eq' as const, value: selecteddepartment }
     ];
     const searchFilters = searchQuery ?[
         {field: 'name', operator: 'contains' as const, value: searchQuery}
@@ -84,18 +84,18 @@ const SubjectsList = () => {
                         />
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
-                        <Select value={selectedDepartement} onValueChange={setSelectedDepartement}>
+                        <Select value={selecteddepartment} onValueChange={setSelecteddepartment}>
                            <SelectTrigger>
-                               <SelectValue placeholder="Filter by Departement"/>
+                               <SelectValue placeholder="Filter by department"/>
                            </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">
                                     All Departments
                                 </SelectItem>
-                                {DEPARTMENT_OPTIONS.map(departement =>(
-                                    <SelectItem key={departement.value} value={departement.value}>
+                                {DEPARTMENT_OPTIONS.map(department =>(
+                                    <SelectItem key={department.value} value={department.value}>
 
-                                        {departement.label}
+                                        {department.label}
 
                                     </SelectItem>
                                 ))}
