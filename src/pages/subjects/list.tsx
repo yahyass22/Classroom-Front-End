@@ -5,7 +5,7 @@ import {Input} from "@/components/ui/input.tsx";
 import {useMemo, useState} from "react";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "@/components/ui/select.tsx";
 import {SelectValue} from "@/components/ui/select.tsx";
-import {DEPARTEMENT_OPTIONS} from "@/constants";
+import {DEPARTMENT_OPTIONS} from "@/constants";
 import {CreateButton} from "@/components/refine-ui/buttons/create.tsx";
 import {DataTable} from "@/components/refine-ui/data-table/data-table.tsx";
 import {useTable} from "@refinedev/react-table";
@@ -15,10 +15,10 @@ import {Badge} from "@/components/ui/badge.tsx";
 
 const SubjectsList = () => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDepartement, setSelectedDepartement] = useState('all');
+    const [selecteddepartment, setSelecteddepartment] = useState('all');
 
-    const departementFilters = selectedDepartement ==='all' ? []: [
-        {field: 'departement' , operator: 'eq' as const , value: selectedDepartement }
+    const departmentFilters = selecteddepartment === 'all' ? [] : [
+        { field: 'department.name', operator: 'eq' as const, value: selecteddepartment }
     ];
     const searchFilters = searchQuery ?[
         {field: 'name', operator: 'contains' as const, value: searchQuery}
@@ -37,8 +37,8 @@ const SubjectsList = () => {
                 filterFn: 'includesString'
             },
             {
-                id: 'departement', accessorKey: 'departement', size: 150,
-                header: ()=> <p className="column-title">Departement</p>,
+                id: 'department', accessorKey: 'department.name', size: 150,
+                header: ()=> <p className="column-title">Department</p>,
                 cell: ({getValue}) => <Badge variant="secondary">{getValue<string>()}</Badge>,
             },
             {
@@ -54,7 +54,7 @@ const SubjectsList = () => {
             resource: 'subjects',
             pagination: {pageSize: 10 , mode: 'server'},
             filters:{
-                permanent: [...departementFilters, ...searchFilters]
+                permanent: [...departmentFilters, ...searchFilters]
             },
             sorters:{
                 initial: [
@@ -84,18 +84,18 @@ const SubjectsList = () => {
                         />
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
-                        <Select value={selectedDepartement} onValueChange={setSelectedDepartement}>
+                        <Select value={selecteddepartment} onValueChange={setSelecteddepartment}>
                            <SelectTrigger>
-                               <SelectValue placeholder="Filter by Departement"/>
+                               <SelectValue placeholder="Filter by department"/>
                            </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">
-                                    All Departements
+                                    All Departments
                                 </SelectItem>
-                                {DEPARTEMENT_OPTIONS.map(departement =>(
-                                    <SelectItem key={departement.value} value={departement.value}>
+                                {DEPARTMENT_OPTIONS.map(department =>(
+                                    <SelectItem key={department.value} value={department.value}>
 
-                                        {departement.label}
+                                        {department.label}
 
                                     </SelectItem>
                                 ))}
