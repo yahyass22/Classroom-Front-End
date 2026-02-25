@@ -80,7 +80,7 @@ export const isCloudinaryConfigured = (): boolean => {
 
 // Backend API configuration (required)
 export const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8000/api/";
-export const BASE_URL = import.meta.env.VITE_API_URL || (BACKEND_BASE_URL.endsWith('/') ? BACKEND_BASE_URL.slice(0, -1) : BACKEND_BASE_URL).replace('/api/', '');
+export const BASE_URL = import.meta.env.VITE_API_URL || BACKEND_BASE_URL.replace(/\/api\/?$/, '').replace(/\/$/, '');
 
 // Authentication token keys (with defaults)
 export const ACCESS_TOKEN_KEY = import.meta.env.VITE_ACCESS_TOKEN_KEY || "accessToken";

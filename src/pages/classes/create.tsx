@@ -1,7 +1,7 @@
 import {CreateView} from "@/components/refine-ui/views/create-view.tsx";
 import {Breadcrumb} from "@/components/refine-ui/layout/breadcrumb.tsx";
 import {Button} from "@/components/ui/button.tsx";
-import {useBack, useCreate} from "@refinedev/core";
+import {useBack, useCreate, useList} from "@refinedev/core";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -74,29 +74,10 @@ const Create = () => {
         );
     };
 
-    const teachers = [
-        {
-            id: 1,
-            name: "John Doe",
-        },
-        {
-            id: 2,
-            name: "Jane Doe",
-        },
-    ];
-
-    const subjects = [
-        {
-            id: 1,
-            name: "Math",
-            code: "MATH",
-        },
-        {
-            id: 2,
-            name: "English",
-            code: "ENG",
-        },
-    ];
+    const { result: teachersResult } = useList({ resource: "teachers" });
+    const teachers = teachersResult?.data ?? [];
+    const { result: subjectsResult } = useList({ resource: "subjects" });
+    const subjects = subjectsResult?.data ?? [];
     const bannerPublicId = form.watch('bannerCldPubId');
 
     const handleBannerChange = (value: { url: string; publicId: string } | null, field: { onChange: (value: string) => void }) => {
@@ -200,7 +181,7 @@ const Create = () => {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {subjects.map((subject) => (
+                                                        {subjects.map((subject: { id: number; name: string; code: string }) => (
                                                             <SelectItem
                                                                 key={subject.id}
                                                                 value={subject.id.toString()}
@@ -233,7 +214,7 @@ const Create = () => {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {teachers.map((teacher) => (
+                                                        {teachers.map((teacher: { id: string; name: string }) => (
                                                             <SelectItem
                                                                 key={teacher.id}
                                                                 value={teacher.id.toString()}
@@ -255,7 +236,7 @@ const Create = () => {
                                         name="capacity"
                                         render={({ field }) => (
                                             <FormItem>
-                                                <FormLabel>Capacity</FormLabel>
+                                                 <FormLabel>Capacity <span className="text-orange-600">*</span></FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="number"
@@ -308,7 +289,7 @@ const Create = () => {
                                     name="description"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel>Description</FormLabel>
+                                            <FormLabel>Description <span className="text-orange-600">*</span></FormLabel>
                                             <FormControl>
                                                 <Textarea
                                                     placeholder="Brief description about the class"

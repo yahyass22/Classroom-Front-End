@@ -9,6 +9,11 @@ interface CloudinaryUploadWidget {
             folder?: string;
             maxFileSize?: number;
             clientAllowedFormats?: string[];
+            sources?: string[];
+            styles?: {
+                palette?: Record<string, string>;
+                fonts?: Record<string, unknown>;
+                };
         },
         callback: (error: Error | null, result: { event: string; info: any }) => void
     ) => {
