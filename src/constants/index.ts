@@ -60,53 +60,32 @@ const getEnvVar = (key: string, required = false): string => {
     if (!value && required) {
         throw new Error(`Missing environment variable: ${key}`);
     }
-    return value || "";
+    // Strip surrounding quotes if present
+    return value ? value.replace(/^['"]|['"]$/g, '') : "";
 };
 
+// Cloudinary configuration (optional - only required for image uploads)
 export const CLOUDINARY_UPLOAD_URL = getEnvVar("VITE_CLOUDINARY_UPLOAD_URL");
 export const CLOUDINARY_CLOUD_NAME = getEnvVar("VITE_CLOUDINARY_CLOUD_NAME");
 export const CLOUDINARY_UPLOAD_PRESET = getEnvVar("VITE_CLOUDINARY_UPLOAD_PRESET");
-export const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL;
-export const BASE_URL = import.meta.env.VITE_API_URL || BACKEND_BASE_URL.replace('/api/', '');
+
+// Check if Cloudinary is configured
+export const isCloudinaryConfigured = (): boolean => {
+    return !!(
+        CLOUDINARY_UPLOAD_URL &&
+        CLOUDINARY_CLOUD_NAME &&
+        CLOUDINARY_UPLOAD_PRESET
+    );
+};
+
+// Backend API configuration (required)
+export const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_BASE_URL || "http://localhost:8000/api/";
+export const BASE_URL = import.meta.env.VITE_API_URL || (BACKEND_BASE_URL.endsWith('/') ? BACKEND_BASE_URL.slice(0, -1) : BACKEND_BASE_URL).replace('/api/', '');
+
+// Authentication token keys (with defaults)
 export const ACCESS_TOKEN_KEY = import.meta.env.VITE_ACCESS_TOKEN_KEY || "accessToken";
 export const REFRESH_TOKEN_KEY = import.meta.env.VITE_REFRESH_TOKEN_KEY || "refreshToken";
 
 export const REFRESH_TOKEN_URL = `${BASE_URL}/refresh-token`;
 
-export const teachers = [
-    {
-        id: "1",
-        name: "John Doe",
-    },
-    {
-        id: "2",
-        name: "Jane Smith",
-    },
-    {
-        id: "3",
-        name: "Dr. Alan Turing",
-    },
-];
 
-export const subjects = [
-    {
-        id: 1,
-        name: "Mathematics",
-        code: "MATH",
-    },
-    {
-        id: 2,
-        name: "Computer Science",
-        code: "CS",
-    },
-    {
-        id: 3,
-        name: "Physics",
-        code: "PHY",
-    },
-    {
-        id: 4,
-        name: "Chemistry",
-        code: "CHEM",
-    },
-];
