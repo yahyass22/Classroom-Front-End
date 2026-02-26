@@ -181,7 +181,7 @@ const Create = () => {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {subjects.map((subject: { id: number; name: string; code: string }) => (
+                                                        {(subjects as Array<{ id: number; name: string; code: string }>).map((subject) => (
                                                             <SelectItem
                                                                 key={subject.id}
                                                                 value={subject.id.toString()}
@@ -214,7 +214,7 @@ const Create = () => {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {teachers.map((teacher: { id: string; name: string }) => (
+                                                        {(teachers as Array<{ id: string; name: string }>).map((teacher) => (
                                                             <SelectItem
                                                                 key={teacher.id}
                                                                 value={teacher.id.toString()}
