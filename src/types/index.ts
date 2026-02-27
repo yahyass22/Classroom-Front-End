@@ -38,22 +38,6 @@ declare global {
             original_filename: string;
         };
     }
-
-    interface CloudinaryWidget {
-        open: () => void;
-    }
-
-    interface Window {
-        cloudinary?: {
-            createUploadWidget: (
-                options: Record<string, unknown>,
-                callback: (
-                    error: unknown,
-                    result: CloudinaryUploadWidgetResults
-                ) => void
-            ) => CloudinaryWidget;
-        };
-    }
 }
 
 export interface UploadWidgetValue {

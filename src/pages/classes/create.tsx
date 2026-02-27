@@ -2,6 +2,7 @@ import {CreateView} from "@/components/refine-ui/views/create-view.tsx";
 import {Breadcrumb} from "@/components/refine-ui/layout/breadcrumb.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {useBack, useCreate, useList} from "@refinedev/core";
+import { useNavigate } from "react-router";
 import {Separator} from "@/components/ui/separator.tsx";
 import {Card, CardContent, CardHeader, CardTitle} from "@/components/ui/card.tsx"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -24,10 +25,12 @@ import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/c
 import {Textarea} from "@/components/ui/textarea.tsx";
 import {Loader2} from "lucide-react";
 import UploadWidget from "@/components/upload-widget";
+import {Subject, User} from "@/types";
 
 
 const Create = () => {
     const back = useBack();
+    const navigate = useNavigate();
     const { mutate } = useCreate();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -46,7 +49,16 @@ const Create = () => {
             schedules: [],
         },
     });
-
+const {query:subjectsQuery} = useList<Subject>({resource: "subjects", pagination:{
+    pageSize:100
+    }});
+    const {query:teachersQuery} = useList<User>({resource: "users", filters:[{field:'role' , operator:'eq',value:'teacher'}] ,pagination:{
+            pageSize:100
+        }});
+    const subjects= subjectsQuery.data?.data || [];
+    const subjectsLoading= subjectsQuery.isLoading;
+    const teachers= teachersQuery.data?.data || [];
+    const teachersLoading= teachersQuery.isLoading;
     const {
         handleSubmit,
         formState: { errors },
@@ -64,8 +76,8 @@ const Create = () => {
             {
                 onSuccess: () => {
                     reset();
-                    back();
                     setIsSubmitting(false);
+                    navigate("/classes");
                 },
                 onError: () => {
                     setIsSubmitting(false);
@@ -74,10 +86,6 @@ const Create = () => {
         );
     };
 
-    const { result: teachersResult } = useList({ resource: "teachers" });
-    const teachers = teachersResult?.data ?? [];
-    const { result: subjectsResult } = useList({ resource: "subjects" });
-    const subjects = subjectsResult?.data ?? [];
     const bannerPublicId = form.watch('bannerCldPubId');
 
     const handleBannerChange = (value: { url: string; publicId: string } | null, field: { onChange: (value: string) => void }) => {
@@ -174,6 +182,7 @@ const Create = () => {
                                                         field.onChange(Number(value))
                                                     }
                                                     value={field.value?.toString()}
+                                                    disabled={subjectsLoading}
                                                 >
                                                     <FormControl>
                                                         <SelectTrigger className="w-full">
@@ -205,8 +214,11 @@ const Create = () => {
                                                     Teacher <span className="text-orange-600">*</span>
                                                 </FormLabel>
                                                 <Select
-                                                    onValueChange={field.onChange}
+                                                    onValueChange={(value) =>
+                                                        field.onChange(value)
+                                                    }
                                                     value={field.value}
+                                                    disabled={teachersLoading}
                                                 >
                                                     <FormControl>
                                                         <SelectTrigger className="w-full">
@@ -214,10 +226,10 @@ const Create = () => {
                                                         </SelectTrigger>
                                                     </FormControl>
                                                     <SelectContent>
-                                                        {(teachers as Array<{ id: string; name: string }>).map((teacher) => (
+                                                        {(teachers as Array<User>).map((teacher) => (
                                                             <SelectItem
                                                                 key={teacher.id}
-                                                                value={teacher.id.toString()}
+                                                                value={teacher.id}
                                                             >
                                                                 {teacher.name}
                                                             </SelectItem>
