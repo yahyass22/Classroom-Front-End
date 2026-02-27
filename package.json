@@ -87,7 +87,7 @@
     "vite": "^6.3.5"
   },
   "scripts": {
-    "dev": "ffrefine dev",
+    "dev": "refine dev",
     "dev:clean": "rimraf node_modules/.vite && refine dev -- --force",
     "build": "refine build",
     "start": "refine start",
