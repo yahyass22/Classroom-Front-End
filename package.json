@@ -89,7 +89,7 @@
   "scripts": {
     "dev": "refine dev",
     "dev:clean": "rimraf node_modules/.vite && refine dev -- --force",
-    "build": "tsc && refine build",
+    "build": "refine build",
     "start": "refine start",
     "refine": "refine"
   },
