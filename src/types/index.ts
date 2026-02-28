@@ -86,7 +86,7 @@ export type ClassDetails = {
     id: number;
     name: string;
     description: string;
-    status: "active" | "inactive";
+    status: "active" | "inactive" | "archived";
     capacity: number;
     courseCode: string;
     courseName: string;

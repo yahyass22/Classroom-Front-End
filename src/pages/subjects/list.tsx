@@ -2,7 +2,7 @@ import {ListView} from "@/components/refine-ui/views/list-view.tsx";
 import {Breadcrumb} from "@/components/refine-ui/layout/breadcrumb.tsx";
 import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
-import {useMemo, useState} from "react";
+import {useMemo, useState, useEffect, useRef} from "react";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "@/components/ui/select.tsx";
 import {SelectValue} from "@/components/ui/select.tsx";
 import {DEPARTMENT_OPTIONS} from "@/constants";
@@ -16,12 +16,31 @@ import {Badge} from "@/components/ui/badge.tsx";
 const SubjectsList = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [selecteddepartment, setSelecteddepartment] = useState('all');
+    
+    // Debounce search query to reduce API calls
+    const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
+    const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        if (debounceTimeoutRef.current) {
+            clearTimeout(debounceTimeoutRef.current);
+        }
+        debounceTimeoutRef.current = setTimeout(() => {
+            setDebouncedSearchQuery(searchQuery);
+        }, 500); // 500ms debounce
+
+        return () => {
+            if (debounceTimeoutRef.current) {
+                clearTimeout(debounceTimeoutRef.current);
+            }
+        };
+    }, [searchQuery]);
 
     const departmentFilters = selecteddepartment === 'all' ? [] : [
-        { field: 'department.name', operator: 'eq' as const, value: selecteddepartment }
+        { field: 'department', operator: 'eq' as const, value: selecteddepartment }
     ];
-    const searchFilters = searchQuery ?[
-        {field: 'name', operator: 'contains' as const, value: searchQuery}
+    const searchFilters = debouncedSearchQuery ?[
+        {field: 'name', operator: 'contains' as const, value: debouncedSearchQuery}
     ]: [];
     const subjectTable= useTable<Subject>({
      columns:useMemo<ColumnDef<Subject>[]>(()=>[
@@ -53,9 +72,6 @@ const SubjectsList = () => {
         refineCoreProps:{
             resource: 'subjects',
             pagination: {pageSize: 10 , mode: 'server'},
-            filters:{
-                permanent: [...departmentFilters, ...searchFilters]
-            },
             sorters:{
                 initial: [
                     {field: 'id' , order:'desc'}
@@ -63,6 +79,17 @@ const SubjectsList = () => {
         },
     }
     });
+
+    const {
+        refineCore: { setFilters },
+    } = subjectTable;
+
+    useEffect(() => {
+        setFilters([
+            ...departmentFilters,
+            ...searchFilters
+        ], 'replace');
+    }, [debouncedSearchQuery, selecteddepartment, setFilters]);
 
 
     return (
