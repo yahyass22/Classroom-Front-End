@@ -1,4 +1,4 @@
-import { GitHubBanner, Refine, } from "@refinedev/core";
+import { GitHubBanner, Refine, ErrorComponent, Authenticated } from "@refinedev/core";
 import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
@@ -6,12 +6,15 @@ import routerProvider, {
   DocumentTitleHandler,
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
-import {BrowserRouter, Outlet, Route, Routes} from "react-router";
+import {BrowserRouter, Outlet, Route, Routes, Navigate} from "react-router";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import "./App.css";
 import { Toaster } from "./components/refine-ui/notification/toaster";
 import { useNotificationProvider } from "./components/refine-ui/notification/use-notification-provider";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
 import { dataProvider } from "./providers/data";
+import { authProvider } from "./providers/auth";
+import AuthPage from "@/pages/auth.tsx";
 import Dashboard from "@/pages/dashboard.tsx";
 import {BookOpen, GraduationCap, Home} from "lucide-react";
 import {Layout} from "@/components/refine-ui/layout/layout.tsx";
@@ -20,15 +23,26 @@ import SubjectsCreate from "@/pages/subjects/create.tsx";
 import ClassesList from "@/pages/classes/list.tsx";
 import ClassesCreate from "@/pages/classes/create.tsx";
 import ClassesShow from "@/pages/classes/show.tsx";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
+
 function App() {
   return (
     <BrowserRouter>
-
+      <QueryClientProvider client={queryClient}>
       <RefineKbarProvider>
         <ThemeProvider>
           <DevtoolsProvider>
             <Refine
               dataProvider={dataProvider}
+              authProvider={authProvider}
               notificationProvider={useNotificationProvider()}
               routerProvider={routerProvider}
               options={{
@@ -62,10 +76,14 @@ function App() {
               ]}
             >
               <Routes>
+                  <Route path="/login" element={<AuthPage />} />
+                  <Route path="/register" element={<AuthPage />} />
                   <Route element = {
-                      <Layout>
-                          <Outlet/>
-                      </Layout>
+                      <Authenticated fallback={<Navigate to="/login" /> }>
+                          <Layout>
+                              <Outlet/>
+                          </Layout>
+                      </Authenticated>
                   }>
                       <Route path = "/" element={<Dashboard/>} />
                       <Route path = "subjects">
@@ -78,7 +96,7 @@ function App() {
                           <Route path = "show/:id" element ={<ClassesShow/>} />
                       </Route>
                   </Route>
-
+                  <Route path="*" element={<ErrorComponent />} />
               </Routes>
               <Toaster />
               <RefineKbar />
@@ -89,8 +107,15 @@ function App() {
           </DevtoolsProvider>
         </ThemeProvider>
       </RefineKbarProvider>
+      </QueryClientProvider>
     </BrowserRouter>
   );
 }
 
 export default App;
+
+
+
+
+
+
