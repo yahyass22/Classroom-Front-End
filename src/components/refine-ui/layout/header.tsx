@@ -12,8 +12,11 @@ import {
   useActiveAuthProvider,
   useLogout,
   useRefineOptions,
+  useGetIdentity,
 } from "@refinedev/core";
-import { LogOutIcon } from "lucide-react";
+import { LogOutIcon, GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export const Header = () => {
   const { isMobile } = useSidebar();
@@ -22,6 +25,9 @@ export const Header = () => {
 };
 
 function DesktopHeader() {
+  const { data: identity } = useGetIdentity();
+  const isGuest = identity?.role === "guest" || localStorage.getItem('guest_mode') === 'true';
+
   return (
     <header
       className={cn(
@@ -40,6 +46,14 @@ function DesktopHeader() {
         "z-40"
       )}
     >
+      {isGuest && (
+        <Alert className="bg-amber-50 border-amber-200 py-2 h-auto mr-auto">
+          <GraduationCap className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="ml-2 text-xs text-amber-800 font-medium">
+            Guest Mode
+          </AlertDescription>
+        </Alert>
+      )}
       <ThemeToggle />
       <UserDropdown />
     </header>
@@ -119,12 +133,23 @@ function MobileHeader() {
 
 const UserDropdown = () => {
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
-
+  const { data: identity } = useGetIdentity();
   const authProvider = useActiveAuthProvider();
+
+  const isGuest = identity?.role === "guest" || localStorage.getItem('guest_mode') === 'true';
 
   if (!authProvider?.getIdentity) {
     return null;
   }
+
+  const handleLogout = () => {
+    if (isGuest) {
+      localStorage.removeItem('guest_mode');
+      window.location.href = '/login';
+    } else {
+      logout();
+    }
+  };
 
   return (
     <DropdownMenu>
@@ -133,15 +158,13 @@ const UserDropdown = () => {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => {
-            logout();
-          }}
+          onClick={handleLogout}
         >
           <LogOutIcon
             className={cn("text-destructive", "hover:text-destructive")}
           />
           <span className={cn("text-destructive", "hover:text-destructive")}>
-            {isLoggingOut ? "Logging out..." : "Logout"}
+            {isLoggingOut ? "Logging out..." : isGuest ? "Exit Guest Mode" : "Logout"}
           </span>
         </DropdownMenuItem>
       </DropdownMenuContent>

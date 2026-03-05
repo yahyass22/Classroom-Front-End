@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { authClient } from "@/lib/auth-client";
 import { useNotification } from "@refinedev/core";
+import { GraduationCap } from "lucide-react";
 
 export default function AuthPage() {
     const [loginEmail, setLoginEmail] = useState("");
@@ -22,6 +23,17 @@ export default function AuthPage() {
 
     const navigate = useNavigate();
     const { open } = useNotification();
+
+    const handleGuestBrowse = () => {
+        // Set a guest session in localStorage
+        localStorage.setItem('guest_mode', 'true');
+        open?.({
+            type: "info",
+            message: "Guest Mode",
+            description: "Browsing as guest. Some features may be limited.",
+        });
+        navigate("/");
+    };
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -219,6 +231,28 @@ export default function AuthPage() {
                             </form>
                         </TabsContent>
                     </CardContent>
+                    <CardFooter className="flex flex-col space-y-4">
+                        <div className="w-full">
+                            <div className="relative">
+                                <div className="absolute inset-0 flex items-center">
+                                    <span className="w-full border-t" />
+                                </div>
+                                <div className="relative flex justify-center text-xs uppercase">
+                                    <span className="bg-background px-2 text-muted-foreground">
+                                        Or
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <Button 
+                            variant="outline" 
+                            className="w-full" 
+                            onClick={handleGuestBrowse}
+                        >
+                            <GraduationCap className="mr-2 h-4 w-4" />
+                            Browse as Guest
+                        </Button>
+                    </CardFooter>
                 </Tabs>
             </Card>
         </div>

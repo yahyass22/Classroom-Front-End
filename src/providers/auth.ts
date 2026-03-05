@@ -35,12 +35,16 @@ export const authProvider: AuthProvider = {
     },
     logout: async () => {
         try {
+            // Clear guest mode if active
+            localStorage.removeItem('guest_mode');
             await authClient.signOut();
             return {
                 success: true,
                 redirectTo: "/login",
             };
         } catch (error) {
+            // Clear guest mode even if there's an error
+            localStorage.removeItem('guest_mode');
             return {
                 success: false,
                 error: {
@@ -52,6 +56,14 @@ export const authProvider: AuthProvider = {
     },
     check: async () => {
         try {
+            // Check if guest mode is enabled
+            const isGuestMode = localStorage.getItem('guest_mode') === 'true';
+            if (isGuestMode) {
+                return {
+                    authenticated: true,
+                };
+            }
+
             const { data: session } = await authClient.getSession();
             if (session) {
                 return {
@@ -74,6 +86,12 @@ export const authProvider: AuthProvider = {
     },
     getPermissions: async () => {
         try {
+            // Check if guest mode is enabled
+            const isGuestMode = localStorage.getItem('guest_mode') === 'true';
+            if (isGuestMode) {
+                return ['guest'];
+            }
+
             const { data: session } = await authClient.getSession();
             return session?.user?.role ? [session.user.role] : null;
         } catch (error) {
@@ -82,6 +100,18 @@ export const authProvider: AuthProvider = {
     },
     getIdentity: async () => {
         try {
+            // Check if guest mode is enabled
+            const isGuestMode = localStorage.getItem('guest_mode') === 'true';
+            if (isGuestMode) {
+                return {
+                    id: 'guest',
+                    name: 'Guest User',
+                    email: 'guest@guest.com',
+                    avatar: undefined,
+                    role: 'guest',
+                };
+            }
+
             const { data: session } = await authClient.getSession();
             if (session) {
                 return {

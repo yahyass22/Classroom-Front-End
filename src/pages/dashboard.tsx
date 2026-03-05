@@ -2,13 +2,42 @@ import { StatsCards } from "@/components/dashboard/StatsCards";
 import { EnrollmentChart } from "@/components/dashboard/EnrollmentChart";
 import { StudentPerformanceTable } from "@/components/dashboard/StudentPerformanceTable";
 import { useSession } from "@/lib/auth-client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { GraduationCap, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Dashboard = () => {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
+  const isGuest = userRole === "guest" || localStorage.getItem('guest_mode') === 'true';
+
+  const handleExitGuest = () => {
+    localStorage.removeItem('guest_mode');
+    window.location.href = '/login';
+  };
 
   return (
     <div className="space-y-6">
+      {isGuest && (
+        <Alert className="bg-amber-50 border-amber-200">
+          <GraduationCap className="h-4 w-4 text-amber-600" />
+          <AlertDescription className="ml-2 flex items-center justify-between">
+            <span className="text-amber-800">
+              <strong>Guest Mode:</strong> You have limited access. Some features may be restricted.
+            </span>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExitGuest}
+              className="ml-4"
+            >
+              <LogOut className="h-3 w-3 mr-2" />
+              Exit Guest
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       {/* Welcome Header */}
       <div className="flex items-center justify-between">
         <div>
