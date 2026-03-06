@@ -49,9 +49,9 @@ const Create = () => {
             schedules: [],
         },
     });
-const {query:subjectsQuery} = useList<Subject>({resource: "subjects", pagination:{
-    pageSize:100
-    }});
+    const {query:subjectsQuery} = useList<Subject>({resource: "subjects", pagination:{
+            pageSize:100
+        }});
     const {query:teachersQuery} = useList<User>({resource: "users", filters:[{field:'role' , operator:'eq',value:'teacher'}] ,pagination:{
             pageSize:100
         }});
@@ -248,7 +248,7 @@ const {query:subjectsQuery} = useList<Subject>({resource: "subjects", pagination
                                         name="capacity"
                                         render={({ field }) => (
                                             <FormItem>
-                                                 <FormLabel>Capacity <span className="text-orange-600">*</span></FormLabel>
+                                                <FormLabel>Capacity <span className="text-orange-600">*</span></FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         type="number"

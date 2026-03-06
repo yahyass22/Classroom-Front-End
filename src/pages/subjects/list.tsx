@@ -1,12 +1,10 @@
-import {ListView} from "@/components/refine-ui/views/list-view.tsx";
-import {Breadcrumb} from "@/components/refine-ui/layout/breadcrumb.tsx";
+import {ListView, ListViewHeader} from "@/components/refine-ui/views/list-view.tsx";
 import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useMemo, useState, useEffect, useRef} from "react";
 import {Select, SelectContent, SelectItem, SelectTrigger} from "@/components/ui/select.tsx";
 import {SelectValue} from "@/components/ui/select.tsx";
 import {DEPARTMENT_OPTIONS} from "@/constants";
-import {CreateButton} from "@/components/refine-ui/buttons/create.tsx";
 import {DataTable} from "@/components/refine-ui/data-table/data-table.tsx";
 import {useTable} from "@refinedev/react-table";
 import {Subject} from "@/types";
@@ -94,25 +92,23 @@ const SubjectsList = () => {
 
     return (
         <ListView>
-            <Breadcrumb/>
-            <h1 className="page-title">Subjects</h1>
-
-                <div className="intro-row">
-                <p> Quick Access to essential Metrics and Management tools.</p>
-                    <div className="actions-row">
-                    <div className="search-field">
-                    <Search className="search-icon" />
-                    <Input
-                        type="text"
-                        placeholder="search by name..."
-                        className="pl-10 w-full"
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex gap-2 w-full sm:w-auto">
+            <ListViewHeader canCreate />
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <p className="text-muted-foreground">Quick access to essential metrics and management tools.</p>
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Search by name..."
+                                className="pl-10 w-full"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
                         <Select value={selecteddepartment} onValueChange={setSelecteddepartment}>
-                           <SelectTrigger>
+                           <SelectTrigger className="w-full sm:w-48">
                                <SelectValue placeholder="Filter by department"/>
                            </SelectTrigger>
                             <SelectContent>
@@ -121,21 +117,16 @@ const SubjectsList = () => {
                                 </SelectItem>
                                 {DEPARTMENT_OPTIONS.map(department =>(
                                     <SelectItem key={department.value} value={department.value}>
-
                                         {department.label}
-
                                     </SelectItem>
                                 ))}
                             </SelectContent>
-
                         </Select>
-                        <CreateButton/>
                     </div>
-
                 </div>
+                <DataTable table={subjectTable}/>
             </div>
-            <DataTable table={subjectTable}/>
         </ListView>
     )
 }
-export default SubjectsList
+export default SubjectsList;

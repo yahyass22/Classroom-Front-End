@@ -2,59 +2,74 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 
-type Theme = "dark" | "light" | "system";
+type Theme = "ocean" | "forest" | "rose" | "amber" | "violet" | "default";
+type Mode = "dark" | "light";
 
 type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
+  defaultMode?: Mode;
   storageKey?: string;
+  modeStorageKey?: string;
 };
 
 type ThemeProviderState = {
   theme: Theme;
+  mode: Mode;
   setTheme: (theme: Theme) => void;
+  setMode: (mode: Mode) => void;
 };
 
 const initialState: ThemeProviderState = {
-  theme: "system",
+  theme: "default",
+  mode: "light",
   setTheme: () => null,
+  setMode: () => null,
 };
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "default",
+  defaultMode = "light",
   storageKey = "refine-ui-theme",
+  modeStorageKey = "refine-ui-mode",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   );
+  const [mode, setMode] = useState<Mode>(
+    () => (localStorage.getItem(modeStorageKey) as Mode) || defaultMode
+  );
 
   useEffect(() => {
     const root = window.document.documentElement;
 
+    // Remove existing mode classes
     root.classList.remove("light", "dark");
+    // Add current mode class
+    root.classList.add(mode);
 
-    if (theme === "system") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
-        ? "dark"
-        : "light";
-
-      root.classList.add(systemTheme);
-      return;
+    // Handle accent theme
+    if (theme === "default") {
+      root.removeAttribute("data-theme");
+    } else {
+      root.setAttribute("data-theme", theme);
     }
-
-    root.classList.add(theme);
-  }, [theme]);
+  }, [theme, mode]);
 
   const value = {
     theme,
+    mode,
     setTheme: (theme: Theme) => {
       localStorage.setItem(storageKey, theme);
       setTheme(theme);
+    },
+    setMode: (mode: Mode) => {
+      localStorage.setItem(modeStorageKey, mode);
+      setMode(mode);
     },
   };
 

@@ -1,10 +1,8 @@
-import {ListView} from "@/components/refine-ui/views/list-view.tsx";
-import {Breadcrumb} from "@/components/refine-ui/layout/breadcrumb.tsx";
+import {ListView, ListViewHeader} from "@/components/refine-ui/views/list-view.tsx";
 import {Search} from "lucide-react";
 import {Input} from "@/components/ui/input.tsx";
 import {useMemo, useState, useEffect, useRef} from "react";
 import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "@/components/ui/select.tsx";
-import {CreateButton} from "@/components/refine-ui/buttons/create.tsx";
 import {DataTable} from "@/components/refine-ui/data-table/data-table.tsx";
 import {useTable} from "@refinedev/react-table";
 import {ClassDetails, Subject, User} from "@/types";
@@ -168,75 +166,57 @@ const ClassesList = () => {
 
     return (
         <ListView>
-            <Breadcrumb />
-
-            <h1 className="page-title">Classes</h1>
-
-            <div className="intro-row">
-                <p>Manage your classes, subjects, and teachers.</p>
-
-                <div className="actions-row">
-                    <div className="search-field">
-                        <Search className="search-icon" />
-
-                        <Input
-                            type="text"
-                            placeholder="Search by name or invite code..."
-                            className="pl-10 w-full"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <Select
-                            value={selectedSubject} onValueChange={setSelectedSubject}
-                            disabled={subjectsQuery.isLoading}
-                        >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder={subjectsQuery.isLoading ? "Loading..." : "Filter by subject"} />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                                <SelectItem value="all">
-                                    All Subjects
-                                </SelectItem>
-                                {subjects.map(subject => (
-                                    <SelectItem key={subject.id} value={String(subject.id)}>
-                                        {subject.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <Select
-                            value={selectedTeacher} onValueChange={setSelectedTeacher}
-                            disabled={teachersQuery.isLoading}
-                        >
-                            <SelectTrigger className="w-[180px]">
-                                <SelectValue placeholder={teachersQuery.isLoading ? "Loading..." : "Filter by teacher"} />
-                            </SelectTrigger>
-
-                            <SelectContent>
-                                <SelectItem value="all">
-                                    All Teachers
-                                </SelectItem>
-                                {teachers.map(teacher => (
-                                    <SelectItem key={teacher.id} value={String(teacher.id)}>
-                                        {teacher.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-
-                        <CreateButton resource="classes" />
+            <ListViewHeader canCreate />
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                    <p className="text-muted-foreground">Manage your classes, subjects, and teachers.</p>
+                    <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
+                        <div className="relative w-full sm:w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="text"
+                                placeholder="Search by name or code..."
+                                className="pl-10 w-full"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <Select
+                                value={selectedSubject} onValueChange={setSelectedSubject}
+                                disabled={subjectsQuery.isLoading}
+                            >
+                                <SelectTrigger className="w-full sm:w-[160px]">
+                                    <SelectValue placeholder={subjectsQuery.isLoading ? "Loading..." : "Subject"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Subjects</SelectItem>
+                                    {subjects.map(subject => (
+                                        <SelectItem key={subject.id} value={String(subject.id)}>{subject.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Select
+                                value={selectedTeacher} onValueChange={setSelectedTeacher}
+                                disabled={teachersQuery.isLoading}
+                            >
+                                <SelectTrigger className="w-full sm:w-[160px]">
+                                    <SelectValue placeholder={teachersQuery.isLoading ? "Loading..." : "Teacher"} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All Teachers</SelectItem>
+                                    {teachers.map(teacher => (
+                                        <SelectItem key={teacher.id} value={String(teacher.id)}>{teacher.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
+                <DataTable table={classTable} />
             </div>
-
-            <DataTable table={classTable} />
         </ListView>
-    )
-}
+    );
+};
 
-export default ClassesList
+export default ClassesList;

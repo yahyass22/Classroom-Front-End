@@ -21,14 +21,38 @@ import {
   useSidebar as useShadcnSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 import {
   useLink,
   useMenu,
   useRefineOptions,
+  useGetIdentity,
   type TreeMenuItem,
 } from "@refinedev/core";
-import { ChevronRight, ListIcon } from "lucide-react";
+import { ChevronRight, ListIcon, GraduationCap } from "lucide-react";
 import React from "react";
+
+// Custom Logo Component
+function Logo({ collapsed = false }: { collapsed?: boolean }) {
+  if (collapsed) {
+    // Show favicon when sidebar is collapsed
+    return (
+      <img
+        src="/favicon-32x32.png"
+        alt="Logo"
+        className="h-7 w-7 object-contain"
+      />
+    );
+  }
+  // Show full logo when sidebar is open
+  return (
+    <img
+      src="/logo.png"
+      alt="Classroom Logo"
+      className="h-8 w-auto object-contain"
+    />
+  );
+}
 
 export function Sidebar() {
   const { open } = useShadcnSidebar();
@@ -210,8 +234,10 @@ function SidebarItemLink({ item, selectedKey }: MenuItemProps) {
 }
 
 function SidebarHeader() {
-  const { title } = useRefineOptions();
   const { open, isMobile } = useShadcnSidebar();
+  const { data: identity } = useGetIdentity();
+  const isGuest =
+    identity?.role === "guest" || localStorage.getItem("guest_mode") === "true";
 
   return (
     <ShadcnSidebarHeader
@@ -223,51 +249,40 @@ function SidebarHeader() {
         "flex-row",
         "items-center",
         "justify-between",
-        "overflow-hidden"
+        "overflow-visible",
+        isGuest && "bg-gradient-to-b from-amber-500/5 to-transparent"
       )}
     >
       <div
         className={cn(
-          "whitespace-nowrap",
           "flex",
           "flex-row",
           "h-full",
           "items-center",
-          "justify-start",
-          "gap-2",
-          "transition-discrete",
-          "duration-200",
           {
-            "pl-3": !open,
-            "pl-5": open,
+            "w-full justify-center": !open,
+            "pl-4": open,
           }
         )}
       >
-        <div>{title.icon}</div>
-        <h2
-          className={cn(
-            "text-sm",
-            "font-bold",
-            "transition-opacity",
-            "duration-200",
-            {
-              "opacity-0": !open,
-              "opacity-100": open,
-            }
+        <div className="relative flex items-center justify-center">
+          <Logo collapsed={!open} />
+          {isGuest && open && (
+            <div className="absolute -bottom-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-amber-500 ring-1 ring-sidebar">
+              <GraduationCap className="h-2 w-2 text-white" />
+            </div>
           )}
-        >
-          {title.text}
-        </h2>
+        </div>
       </div>
 
-      <ShadcnSidebarTrigger
-        className={cn("text-muted-foreground", "mr-1.5", {
-          "opacity-0": !open,
-          "opacity-100": open || isMobile,
-          "pointer-events-auto": open || isMobile,
-          "pointer-events-none": !open && !isMobile,
-        })}
-      />
+      <div className={cn("flex items-center shrink-0", {
+        "hidden": !open,
+        "flex": open,
+      })}>
+        <ShadcnSidebarTrigger
+          className="text-muted-foreground mr-1.5"
+        />
+      </div>
     </ShadcnSidebarHeader>
   );
 }

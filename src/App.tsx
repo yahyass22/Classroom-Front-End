@@ -1,5 +1,4 @@
 import { GitHubBanner, Refine, ErrorComponent, Authenticated } from "@refinedev/core";
-import { DevtoolsPanel, DevtoolsProvider } from "@refinedev/devtools";
 import { RefineKbar, RefineKbarProvider } from "@refinedev/kbar";
 
 import routerProvider, {
@@ -24,6 +23,17 @@ import ClassesList from "@/pages/classes/list.tsx";
 import ClassesCreate from "@/pages/classes/create.tsx";
 import ClassesShow from "@/pages/classes/show.tsx";
 
+// Custom Logo Component
+function Logo() {
+  return (
+    <img
+      src="/logo.png?v=1"
+      alt="Classroom Logo"
+      className="h-8 w-auto object-contain"
+    />
+  );
+}
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -39,23 +49,23 @@ function App() {
       <QueryClientProvider client={queryClient}>
       <RefineKbarProvider>
         <ThemeProvider>
-          <DevtoolsProvider>
-            <Refine
-              dataProvider={dataProvider}
-              authProvider={authProvider}
-              notificationProvider={useNotificationProvider()}
-              routerProvider={routerProvider}
-              options={{
-                syncWithLocation: true,
-                warnWhenUnsavedChanges: true,
-                projectId: "QVd5OO-hUOFVS-XolpMx",
-              }}
+          <Refine
+            dataProvider={dataProvider}
+            authProvider={authProvider}
+            notificationProvider={useNotificationProvider()}
+            routerProvider={routerProvider}
+            title={<Logo />}
+            options={{
+              syncWithLocation: true,
+              warnWhenUnsavedChanges: true,
+              projectId: "QVd5OO-hUOFVS-XolpMx",
+            }}
 
               resources={[
                   {
                       name: 'Dashboard' ,
                       list:'/' ,
-                      meta : {label: 'home' , icon: <Home/>}
+                      meta : {label: 'Dashboard' , icon: <Home/>}
                   },
                   {
                       name: 'subjects',
@@ -70,9 +80,6 @@ function App() {
                       show:'/classes/show/:id',
                       meta: {label: 'Classes' , icon: <GraduationCap /> }
                   }
-
-
-
               ]}
             >
               <Routes>
@@ -103,8 +110,6 @@ function App() {
               <UnsavedChangesNotifier />
               <DocumentTitleHandler />
             </Refine>
-            <DevtoolsPanel />
-          </DevtoolsProvider>
         </ThemeProvider>
       </RefineKbarProvider>
       </QueryClientProvider>

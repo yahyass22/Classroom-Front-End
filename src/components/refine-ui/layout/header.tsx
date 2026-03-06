@@ -1,5 +1,7 @@
+import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/refine-ui/layout/user-avatar";
 import { ThemeToggle } from "@/components/refine-ui/theme/theme-toggle";
+import { ThemeSwitcher } from "@/components/refine-ui/theme/theme-switcher";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,12 +13,21 @@ import { cn } from "@/lib/utils";
 import {
   useActiveAuthProvider,
   useLogout,
-  useRefineOptions,
   useGetIdentity,
 } from "@refinedev/core";
-import { LogOutIcon, GraduationCap } from "lucide-react";
+import { LogOutIcon, GraduationCap, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+
+// Custom Logo Component
+function Logo() {
+  return (
+    <img
+      src="/logo.png"
+      alt="Classroom Logo"
+      className="h-8 w-auto object-contain"
+    />
+  );
+}
 
 export const Header = () => {
   const { isMobile } = useSidebar();
@@ -46,14 +57,7 @@ function DesktopHeader() {
         "z-40"
       )}
     >
-      {isGuest && (
-        <Alert className="bg-amber-50 border-amber-200 py-2 h-auto mr-auto">
-          <GraduationCap className="h-4 w-4 text-amber-600" />
-          <AlertDescription className="ml-2 text-xs text-amber-800 font-medium">
-            Guest Mode
-          </AlertDescription>
-        </Alert>
-      )}
+      <ThemeSwitcher />
       <ThemeToggle />
       <UserDropdown />
     </header>
@@ -63,7 +67,9 @@ function DesktopHeader() {
 function MobileHeader() {
   const { open, isMobile } = useSidebar();
 
-  const { title } = useRefineOptions();
+  const { data: identity } = useGetIdentity();
+  const isGuest =
+    identity?.role === "guest" || localStorage.getItem("guest_mode") === "true";
 
   return (
     <header
@@ -109,21 +115,28 @@ function MobileHeader() {
           }
         )}
       >
-        <div>{title.icon}</div>
-        <h2
-          className={cn(
-            "text-sm",
-            "font-bold",
-            "transition-opacity",
-            "duration-200",
-            {
-              "opacity-0": !open,
-              "opacity-100": open,
-            }
+        <div className="relative">
+          <Logo />
+          {isGuest && (
+            <div className="absolute -bottom-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-amber-500 ring-1 ring-sidebar">
+              <GraduationCap className="h-2 w-2 text-white" />
+            </div>
           )}
-        >
-          {title.text}
-        </h2>
+        </div>
+        {isGuest && open && (
+          <Badge
+            variant="secondary"
+            className={cn(
+              "h-5 px-2 text-[10px] uppercase font-bold bg-amber-100 text-amber-700 border-amber-200 transition-opacity duration-200",
+              {
+                "opacity-0": !open,
+                "opacity-100": open,
+              }
+            )}
+          >
+            Guest
+          </Badge>
+        )}
       </div>
 
       <ThemeToggle className={cn("h-8", "w-8")} />
@@ -153,10 +166,34 @@ const UserDropdown = () => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger>
-        <UserAvatar />
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          className={cn(
+            "relative h-12 flex items-center gap-2 px-2 hover:bg-accent/50 transition-all rounded-full group",
+            isGuest && "pr-4 bg-gradient-to-r from-amber-500/5 to-amber-500/10 hover:from-amber-500/10 hover:to-amber-500/20 border border-amber-200/50 shadow-[0_0_15px_-5px_rgba(245,158,11,0.2)]"
+          )}
+        >
+          <div className="relative">
+            <UserAvatar />
+            {isGuest && (
+              <div className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-500 ring-2 ring-sidebar shadow-sm animate-in zoom-in duration-300">
+                <GraduationCap className="h-2.5 w-2.5 text-white" />
+              </div>
+            )}
+            {isGuest && (
+              <div className="absolute inset-0 rounded-full ring-2 ring-amber-500/20 animate-pulse" />
+            )}
+          </div>
+          {isGuest && (
+            <div className="flex flex-col items-start gap-0">
+              <span className="text-[10px] font-bold text-amber-600/70 uppercase tracking-tight leading-none">Session</span>
+              <span className="text-xs font-bold text-amber-700 leading-tight">Guest</span>
+            </div>
+          )}
+        </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuItem
           onClick={handleLogout}
         >
