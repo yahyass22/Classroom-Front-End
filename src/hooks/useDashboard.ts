@@ -41,3 +41,68 @@ export const useStudentPerformance = (page: number, limit: number, department?: 
     staleTime: 2 * 60 * 1000,
   });
 };
+
+// New hooks for additional charts
+export const useClassStatusDistribution = () => {
+  return useQuery({
+    queryKey: ["dashboard", "class-status-distribution"],
+    queryFn: dashboardApi.getClassStatusDistribution,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useDepartmentDistribution = () => {
+  return useQuery({
+    queryKey: ["dashboard", "department-distribution"],
+    queryFn: dashboardApi.getDepartmentDistribution,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useEnrollmentByDepartment = () => {
+  return useQuery({
+    queryKey: ["dashboard", "enrollment-by-department"],
+    queryFn: dashboardApi.getEnrollmentByDepartment,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useStudentDepartmentDistribution = () => {
+  return useQuery({
+    queryKey: ["dashboard", "student-department-distribution"],
+    queryFn: dashboardApi.getStudentDepartmentDistribution,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useScheduleHeatmap = () => {
+  return useQuery({
+    queryKey: ["dashboard", "schedule-heatmap"],
+    queryFn: dashboardApi.getScheduleHeatmap,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useTopTeachers = () => {
+  return useQuery({
+    queryKey: ["dashboard", "top-teachers"],
+    queryFn: dashboardApi.getTopTeachers,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useUserSignupTrends = () => {
+  return useQuery({
+    queryKey: ["dashboard", "user-signup-trends"],
+    queryFn: dashboardApi.getUserSignupTrends,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useAtRiskResources = () => {
+  return useQuery({
+    queryKey: ["dashboard", "at-risk"],
+    queryFn: dashboardApi.getAtRiskResources,
+    staleTime: 5 * 60 * 1000,
+  });
+};

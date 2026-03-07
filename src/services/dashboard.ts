@@ -63,6 +63,56 @@ export interface StudentPerformanceResponse {
   };
 }
 
+// New interfaces for additional charts
+export interface ClassStatusDistribution {
+  status: "active" | "inactive" | "archived";
+  count: number;
+}
+
+export interface DepartmentDistribution {
+  name: string;
+  code: string;
+  classCount: number;
+  subjectCount: number;
+  teacherCount: number;
+}
+
+export interface EnrollmentByDepartment {
+  department: string;
+  month: string;
+  count: number;
+}
+
+export interface StudentDepartmentDistribution {
+  name: string;
+  code: string;
+  studentCount: number;
+}
+
+export interface ScheduleHeatmapData {
+  day: string;
+  hour: number;
+  count: number;
+  subjects?: string[];
+  classes?: string[];
+}
+
+export interface TopTeacher {
+  id: number;
+  name: string;
+  email: string;
+  department: string;
+  classCount: number;
+  studentCount: number;
+}
+
+export interface UserSignupTrend {
+  month: string;
+  students: number;
+  teachers: number;
+  total: number;
+}
+
 const apiClient = {
   async get<T>(endpoint: string): Promise<T> {
     // BASE_URL already includes /api, so we just append the endpoint
@@ -83,6 +133,14 @@ const apiClient = {
   },
 };
 
+export interface AtRiskResource {
+  id: string | number;
+  name: string;
+  inviteCode: string;
+  type: "class" | "teacher";
+  reason: string;
+}
+
 export const dashboardApi = {
   getStats: () => apiClient.get<DashboardStats>("/dashboard/stats"),
   getEnrollmentTrends: () => apiClient.get<EnrollmentTrend[]>("/dashboard/enrollment-trends"),
@@ -96,4 +154,13 @@ export const dashboardApi = {
     });
     return apiClient.get<StudentPerformanceResponse>(`/dashboard/student-performance?${params}`);
   },
+  // New API calls for additional charts
+  getClassStatusDistribution: () => apiClient.get<ClassStatusDistribution[]>("/dashboard/class-status-distribution"),
+  getDepartmentDistribution: () => apiClient.get<DepartmentDistribution[]>("/dashboard/department-distribution"),
+  getEnrollmentByDepartment: () => apiClient.get<EnrollmentByDepartment[]>("/dashboard/enrollment-by-department"),
+  getStudentDepartmentDistribution: () => apiClient.get<StudentDepartmentDistribution[]>("/dashboard/student-department-distribution"),
+  getScheduleHeatmap: () => apiClient.get<ScheduleHeatmapData[]>("/dashboard/schedule-heatmap"),
+  getTopTeachers: () => apiClient.get<TopTeacher[]>("/dashboard/top-teachers"),
+  getUserSignupTrends: () => apiClient.get<UserSignupTrend[]>("/dashboard/user-signup-trends"),
+  getAtRiskResources: () => apiClient.get<AtRiskResource[]>("/dashboard/at-risk"),
 };
