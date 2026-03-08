@@ -117,7 +117,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const [editContent, setEditContent] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState<number | null>(null);
 
-  const { data: discussion, isLoading } = useQuery({
+  const { data: discussion, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['discussion', discussionId, resolvedClassId],
     queryFn: async () => {
       const endpoint = resolvedClassId
@@ -250,6 +250,20 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
     );
   }
 
+  if (isError) {
+    return (
+      <Alert variant="destructive">
+        <Shield className="h-4 w-4" />
+        <AlertDescription className="flex items-center justify-between w-full">
+          <span>{error instanceof Error ? error.message : 'An error occurred while fetching the discussion'}</span>
+          <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-4">
+            Retry
+          </Button>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (!discussion) {
     return (
       <Alert>
@@ -318,6 +332,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                   onClick={() => pinMutation.mutate()}
                   className={discussion.isPinned ? 'bg-primary/10' : ''}
                   disabled={pinMutation.isPending}
+                  aria-label={discussion.isPinned ? "Unpin discussion" : "Pin discussion"}
+                  title={discussion.isPinned ? "Unpin discussion" : "Pin discussion"}
                 >
                   <Pin className="h-4 w-4" />
                 </Button>
@@ -327,6 +343,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                   onClick={() => lockMutation.mutate()}
                   className={discussion.isLocked ? 'bg-amber-100' : ''}
                   disabled={lockMutation.isPending}
+                  aria-label={discussion.isLocked ? "Unlock discussion" : "Lock discussion"}
+                  title={discussion.isLocked ? "Unlock discussion" : "Lock discussion"}
                 >
                   <Lock className="h-4 w-4" />
                 </Button>
@@ -367,6 +385,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                         reply.userVote === 'up' && "text-primary bg-primary/10"
                       )}
                       onClick={() => handleVote(reply.id, reply.userVote, 'up')}
+                      aria-label={reply.userVote === 'up' ? "Remove upvote" : "Upvote reply"}
+                      title={reply.userVote === 'up' ? "Remove upvote" : "Upvote reply"}
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
@@ -385,6 +405,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                         reply.userVote === 'down' && "text-destructive bg-destructive/10"
                       )}
                       onClick={() => handleVote(reply.id, reply.userVote, 'down')}
+                      aria-label={reply.userVote === 'down' ? "Remove downvote" : "Downvote reply"}
+                      title={reply.userVote === 'down' ? "Remove downvote" : "Downvote reply"}
                     >
                       <ArrowDown className="h-4 w-4" />
                     </Button>
@@ -436,6 +458,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                                 setEditContent(reply.content);
                               }}
                               className="h-7 text-xs"
+                              aria-label="Edit reply"
+                              title="Edit reply"
                             >
                               <Edit2 className="h-3.5 w-3.5" />
                             </Button>
@@ -444,6 +468,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                               size="sm"
                               onClick={() => setShowDeleteDialog(reply.id)}
                               className="h-7 text-xs text-destructive"
+                              aria-label="Delete reply"
+                              title="Delete reply"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </Button>

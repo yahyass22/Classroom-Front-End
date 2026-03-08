@@ -64,6 +64,7 @@ export function DiscussionForm() {
   const [content, setContent] = useState('');
   const [type, setType] = useState<'general' | 'question' | 'announcement' | 'resource'>('general');
   const [selectedClassId, setSelectedClassId] = useState<string>('');
+  const [selectedClassState, setSelectedClassState] = useState<Class | null>(null);
   const [preview, setPreview] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isClassSelectorOpen, setIsClassSelectorOpen] = useState(false);
@@ -162,7 +163,7 @@ export function DiscussionForm() {
     return '/discussions';
   };
 
-  const selectedClass = classes.find((c: Class) => String(c.id) === selectedClassId);
+  const selectedClass = selectedClassState;
 
   return (
     <div className="max-w-3xl mx-auto space-y-8">
@@ -174,7 +175,7 @@ export function DiscussionForm() {
           className="h-10 w-10 shrink-0"
           asChild
         >
-          <Link to={getBackPath()}>
+          <Link to={getBackPath()} aria-label="Back to discussions">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
@@ -204,6 +205,7 @@ export function DiscussionForm() {
                 <Popover open={isClassSelectorOpen} onOpenChange={setIsClassSelectorOpen}>
                   <PopoverTrigger asChild>
                     <Button
+                      type="button"
                       variant="outline"
                       role="combobox"
                       className={cn(
@@ -272,10 +274,10 @@ export function DiscussionForm() {
                                 value={`${cls.name} ${cls.subject?.name || ''} ${cls.subject?.code || ''}`.trim()}
                                 onSelect={() => {
                                   setSelectedClassId(String(cls.id));
+                                  setSelectedClassState(cls);
                                   setIsClassSelectorOpen(false);
                                   setSearchQuery('');
-                                }}
-                                className="flex items-center justify-between"
+                                }}                                className="flex items-center justify-between"
                               >
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2">
