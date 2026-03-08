@@ -21,13 +21,17 @@ export const apiClient = {
 
     console.log('📡 API Response Status:', response.status);
     
-    const data = await response.json();
-    console.log('📦 API Response Data:', data);
+    let data: any;
+    try {
+      data = await response.json();
+    } catch (e) {
+      data = null;
+    }
 
     if (!response.ok) {
-      const error = data as any;
-      console.error('❌ API Error:', error);
-      throw new Error(error.message || `HTTP ${response.status}`);
+      console.error('❌ API Error Status:', response.status);
+      const message = data?.error || data?.message || `HTTP ${response.status}`;
+      throw new Error(message);
     }
 
     return data as T;
@@ -46,13 +50,17 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
 
-    const responseData = await response.json();
-    console.log('📦 API POST Response:', responseData);
+    let responseData: any;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = null;
+    }
 
     if (!response.ok) {
-      const error = responseData as any;
-      console.error('❌ API Error:', error);
-      throw new Error(error.message || `HTTP ${response.status}`);
+      console.error('❌ API Error Status:', response.status);
+      const message = responseData?.error || responseData?.message || `HTTP ${response.status}`;
+      throw new Error(message);
     }
 
     return responseData as T;
@@ -71,12 +79,17 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
 
-    const responseData = await response.json();
+    let responseData: any;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = null;
+    }
     
     if (!response.ok) {
-      const error = responseData as any;
-      console.error('❌ API Error:', error);
-      throw new Error(error.message || `HTTP ${response.status}`);
+      console.error('❌ API Error Status:', response.status);
+      const message = responseData?.error || responseData?.message || `HTTP ${response.status}`;
+      throw new Error(message);
     }
 
     return responseData as T;
@@ -94,12 +107,17 @@ export const apiClient = {
       credentials: "include",
     });
 
-    const responseData = await response.json();
+    let responseData: any;
+    try {
+      responseData = await response.json();
+    } catch (e) {
+      responseData = null;
+    }
 
     if (!response.ok) {
-      const error = responseData as any;
-      console.error('❌ API Error:', error);
-      throw new Error(error.message || `HTTP ${response.status}`);
+      console.error('❌ API Error Status:', response.status);
+      const message = responseData?.error || responseData?.message || `HTTP ${response.status}`;
+      throw new Error(message);
     }
 
     return responseData as T;

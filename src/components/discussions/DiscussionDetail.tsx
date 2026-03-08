@@ -82,6 +82,7 @@ interface Reply {
     image: string | null;
   } | null;
   voteCount: number;
+  userVote: 'up' | 'down' | null;
 }
 
 const typeColors: Record<string, string> = {
@@ -183,22 +184,30 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
 
   const pinMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.post(`/classes/${classId}/discussions/${discussionId}/pin`);
+      if (!resolvedClassId) throw new Error("Class ID is required to pin a discussion");
+      await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/pin`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
       toast.success('Discussion pinned');
     },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to pin discussion');
+    }
   });
 
   const lockMutation = useMutation({
     mutationFn: async () => {
-      await apiClient.post(`/classes/${classId}/discussions/${discussionId}/lock`);
+      if (!resolvedClassId) throw new Error("Class ID is required to lock a discussion");
+      await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/lock`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
       toast.success('Discussion locked');
     },
+    onError: (error: any) => {
+      toast.error(error.message || 'Failed to lock discussion');
+    }
   });
 
   const handleReply = () => {
@@ -211,6 +220,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   };
 
   const isTeacher = session?.user?.role === 'teacher' || session?.user?.role === 'admin';
+  const isGlobalDiscussion = !resolvedClassId || params.id === undefined && !classId;
 
   if (isLoading) {
     return (
@@ -288,13 +298,14 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                 </div>
               </div>
             </div>
-            {isTeacher && (
+            {isTeacher && !isGlobalDiscussion && (
               <div className="flex gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => pinMutation.mutate()}
                   className={discussion.isPinned ? 'bg-primary/10' : ''}
+                  disabled={pinMutation.isPending}
                 >
                   <Pin className="h-4 w-4" />
                 </Button>
@@ -303,6 +314,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                   size="sm"
                   onClick={() => lockMutation.mutate()}
                   className={discussion.isLocked ? 'bg-amber-100' : ''}
+                  disabled={lockMutation.isPending}
                 >
                   <Lock className="h-4 w-4" />
                 </Button>
@@ -338,17 +350,29 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleVote(reply.id, null, 'up')}
+                      className={cn(
+                        "h-8 w-8 p-0",
+                        reply.userVote === 'up' && "text-primary bg-primary/10"
+                      )}
+                      onClick={() => handleVote(reply.id, reply.userVote, 'up')}
                     >
                       <ArrowUp className="h-4 w-4" />
                     </Button>
-                    <span className="text-sm font-semibold">{reply.voteCount || reply.upvotes - reply.downvotes}</span>
+                    <span className={cn(
+                      "text-sm font-semibold",
+                      reply.userVote === 'up' && "text-primary",
+                      reply.userVote === 'down' && "text-destructive"
+                    )}>
+                      {reply.voteCount}
+                    </span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0"
-                      onClick={() => handleVote(reply.id, null, 'down')}
+                      className={cn(
+                        "h-8 w-8 p-0",
+                        reply.userVote === 'down' && "text-destructive bg-destructive/10"
+                      )}
+                      onClick={() => handleVote(reply.id, reply.userVote, 'down')}
                     >
                       <ArrowDown className="h-4 w-4" />
                     </Button>

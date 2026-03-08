@@ -134,8 +134,8 @@ export function DiscussionForm() {
     },
     onError: (error: any) => {
       console.error('❌ Create discussion error:', error);
-      console.error('Error details:', error.response?.data, error.message);
-      toast.error(error.response?.data?.error || error.message || 'Failed to create discussion');
+      const message = error.response?.data?.error || error.message || String(error);
+      toast.error(message);
     },
   });
 

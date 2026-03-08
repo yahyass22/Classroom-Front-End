@@ -34,7 +34,7 @@ const DiscussionsListPage = () => {
 
   // Check if we're in class-specific discussions or global discussions
   const isClassSpecific = !!classId;
-  const isGlobalDiscussions = location.pathname === '/discussions' || location.pathname.startsWith('/discussions?');
+  const isGlobalDiscussions = location.pathname === '/discussions';
 
   const getNewDiscussionPath = () => {
     if (isClassSpecific) {
