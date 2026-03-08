@@ -171,6 +171,9 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
     },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Action failed');
+    },
   });
 
   const acceptAnswerMutation = useMutation({
@@ -180,6 +183,9 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
       toast.success('Answer marked as accepted');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Action failed');
     },
   });
 
@@ -191,6 +197,9 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
       setShowDeleteDialog(null);
       toast.success('Reply deleted successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Action failed');
     },
   });
 
