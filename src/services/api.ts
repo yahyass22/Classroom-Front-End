@@ -1,0 +1,150 @@
+import { BASE_URL } from "@/constants";
+
+// Normalize BASE_URL by removing trailing /api or / and then append /api
+const normalizedBase = BASE_URL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+const API_BASE = `${normalizedBase}/api`;
+
+/**
+ * Generic API client for making HTTP requests
+ */
+export const apiClient = {
+  async get<T>(endpoint: string): Promise<T> {
+    const url = `${API_BASE}${endpoint}`;
+    console.log('🌐 API GET:', url);
+    
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    console.log('📡 API Response Status:', response.status);
+    
+    const isNoContent = response.status === 204 || response.status === 205;
+    let data: any = null;
+    
+    if (!isNoContent) {
+      try {
+        data = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
+    }
+
+    if (!response.ok) {
+      console.error('❌ API Error Status:', response.status);
+      const message = data?.error || data?.message || `HTTP ${response.status}`;
+      throw new Error(message);
+    }
+
+    return data as T;
+  },
+
+  async post<T>(endpoint: string, data?: any): Promise<T> {
+    const url = `${API_BASE}${endpoint}`;
+    console.log('🌐 API POST:', url, data);
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    const isNoContent = response.status === 204 || response.status === 205;
+    let responseData: any = null;
+    
+    if (!isNoContent) {
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
+    }
+
+    if (!response.ok) {
+      console.error('❌ API Error Status:', response.status);
+      const message = responseData?.error || responseData?.message || `HTTP ${response.status}`;
+      throw new Error(message);
+    }
+
+    return responseData as T;
+  },
+
+  async put<T>(endpoint: string, data?: any): Promise<T> {
+    const url = `${API_BASE}${endpoint}`;
+    console.log('🌐 API PUT:', url, data);
+    
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify(data),
+    });
+
+    const isNoContent = response.status === 204 || response.status === 205;
+    let responseData: any = null;
+    
+    if (!isNoContent) {
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
+    }
+    
+    if (!response.ok) {
+      console.error('❌ API Error Status:', response.status);
+      const message = responseData?.error || responseData?.message || `HTTP ${response.status}`;
+      throw new Error(message);
+    }
+
+    return responseData as T;
+  },
+
+  async delete<T>(endpoint: string): Promise<T> {
+    const url = `${API_BASE}${endpoint}`;
+    console.log('🌐 API DELETE:', url);
+    
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    const isNoContent = response.status === 204 || response.status === 205;
+    let responseData: any = null;
+    
+    if (!isNoContent) {
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
+    }
+
+    if (!response.ok) {
+      console.error('❌ API Error Status:', response.status);
+      const message = responseData?.error || responseData?.message || `HTTP ${response.status}`;
+      throw new Error(message);
+    }
+
+    return responseData as T;
+  },
+};

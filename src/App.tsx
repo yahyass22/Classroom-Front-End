@@ -15,13 +15,16 @@ import { dataProvider } from "./providers/data";
 import { authProvider } from "./providers/auth";
 import AuthPage from "@/pages/auth.tsx";
 import Dashboard from "@/pages/dashboard.tsx";
-import {BookOpen, GraduationCap, Home} from "lucide-react";
+import {BookOpen, GraduationCap, Home, MessageSquare} from "lucide-react";
 import {Layout} from "@/components/refine-ui/layout/layout.tsx";
 import SubjectsList from "@/pages/subjects/list.tsx";
 import SubjectsCreate from "@/pages/subjects/create.tsx";
 import ClassesList from "@/pages/classes/list.tsx";
 import ClassesCreate from "@/pages/classes/create.tsx";
 import ClassesShow from "@/pages/classes/show.tsx";
+import DiscussionsListPage from "@/pages/discussions/list.tsx";
+import DiscussionsShowPage from "@/pages/discussions/show.tsx";
+import DiscussionsNewPage from "@/pages/discussions/new.tsx";
 
 // Custom Logo Component
 function Logo() {
@@ -68,6 +71,12 @@ function App() {
                       meta : {label: 'Dashboard' , icon: <Home/>}
                   },
                   {
+                      name: 'discussions',
+                      list: '/discussions',
+                      create: '/discussions/new',
+                      meta: {label: 'Discussions' , icon: <MessageSquare /> }
+                  },
+                  {
                       name: 'subjects',
                       list: '/subjects',
                       create: '/subjects/create',
@@ -93,6 +102,11 @@ function App() {
                       </Authenticated>
                   }>
                       <Route path = "/" element={<Dashboard/>} />
+                      <Route path = "discussions">
+                          <Route index element ={<DiscussionsListPage />} />
+                          <Route path = "new" element ={<DiscussionsNewPage/>} />
+                          <Route path = ":discussionId" element ={<DiscussionsShowPage/>} />
+                      </Route>
                       <Route path = "subjects">
                           <Route index element ={<SubjectsList />} />
                           <Route path = "create" element ={<SubjectsCreate/>} />
@@ -101,6 +115,11 @@ function App() {
                           <Route index element ={<ClassesList />} />
                           <Route path = "create" element ={<ClassesCreate/>} />
                           <Route path = "show/:id" element ={<ClassesShow/>} />
+                          <Route path = ":id/discussions">
+                              <Route index element ={<DiscussionsListPage />} />
+                              <Route path = "new" element ={<DiscussionsNewPage/>} />
+                              <Route path = ":discussionId" element ={<DiscussionsShowPage/>} />
+                          </Route>
                       </Route>
                   </Route>
                   <Route path="*" element={<ErrorComponent />} />
