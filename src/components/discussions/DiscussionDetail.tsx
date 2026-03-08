@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 
 interface DiscussionDetail {
   id: number;
@@ -61,10 +62,10 @@ interface DiscussionDetail {
     role: string;
     image: string | null;
   } | null;
-  replies: Reply[];
+  replies: DiscussionReply[];
 }
 
-interface Reply {
+interface DiscussionReply {
   id: number;
   discussionId: number;
   parentId: number | null;
@@ -116,27 +117,23 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const [editContent, setEditContent] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState<number | null>(null);
 
-  const { data: discussionData, isLoading } = useQuery({
+  const { data: discussion, isLoading } = useQuery({
     queryKey: ['discussion', discussionId, resolvedClassId],
     queryFn: async () => {
       const endpoint = resolvedClassId
         ? `/classes/${resolvedClassId}/discussions/${discussionId}`
         : `/discussions/${discussionId}`;
-      const response = await apiClient.get(endpoint);
-      // Backend returns { data: discussion object with replies }
+      const response = await apiClient.get<{ data: DiscussionDetail }>(endpoint);
       return response.data;
     },
   });
 
-  const discussion = discussionData?.data as DiscussionDetail | undefined;
-
   const createReplyMutation = useMutation({
     mutationFn: async ({ content, parentId }: { content: string; parentId?: number }) => {
-      const response = await apiClient.post(`/discussions/${discussionId}/replies`, {
+      await apiClient.post(`/discussions/${discussionId}/replies`, {
         content,
         parentId,
       });
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
@@ -144,17 +141,32 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       setReplyingTo(null);
       toast.success('Reply posted successfully');
     },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.error || 'Failed to post reply');
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to post reply');
+    },
+  });
+
+  const updateReplyMutation = useMutation({
+    mutationFn: async ({ replyId, content }: { replyId: number; content: string }) => {
+      await apiClient.put(`/discussions/${discussionId}/replies/${replyId}`, {
+        content,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      setEditingId(null);
+      toast.success('Reply updated successfully');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to update reply');
     },
   });
 
   const voteMutation = useMutation({
     mutationFn: async ({ replyId, voteType }: { replyId: number; voteType: 'up' | 'down' | null }) => {
-      const response = await apiClient.post(`/discussions/${discussionId}/replies/${replyId}/vote`, {
+      await apiClient.post(`/discussions/${discussionId}/replies/${replyId}/vote`, {
         voteType,
       });
-      return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
@@ -246,9 +258,9 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
     );
   }
 
-  const rootReplies = discussion.replies?.filter((r: Reply) => !r.parentId) || [];
+  const rootReplies = discussion.replies?.filter((r: DiscussionReply) => !r.parentId) || [];
   const getRepliesToReply = (parentId: number) => 
-    discussion.replies?.filter((r: Reply) => r.parentId === parentId) || [];
+    discussion.replies?.filter((r: DiscussionReply) => r.parentId === parentId) || [];
 
   return (
     <div className="space-y-6">
@@ -340,7 +352,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
           </h2>
         </div>
 
-        {rootReplies.map((reply: Reply) => (
+        {rootReplies.map((reply: DiscussionReply) => (
           <div key={reply.id} className="space-y-4">
             <Card className={reply.isAccepted ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-900/10' : ''}>
               <CardContent className="p-4">
@@ -459,11 +471,21 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                           className="min-h-[100px]"
                         />
                         <div className="flex gap-2">
-                          <Button size="sm" onClick={() => setEditingId(null)}>Cancel</Button>
-                          <Button size="sm" onClick={() => {
-                            // Would need update mutation here
-                            setEditingId(null);
-                          }}>Save</Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => setEditingId(null)}
+                            disabled={updateReplyMutation.isPending}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            onClick={() => updateReplyMutation.mutate({ replyId: reply.id, content: editContent })}
+                            disabled={updateReplyMutation.isPending || !editContent.trim()}
+                          >
+                            {updateReplyMutation.isPending ? 'Saving...' : 'Save'}
+                          </Button>
                         </div>
                       </div>
                     ) : (
@@ -475,7 +497,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
                     )}
 
                     {/* Nested replies */}
-                    {getRepliesToReply(reply.id).map((nestedReply: Reply) => (
+                    {getRepliesToReply(reply.id).map((nestedReply: DiscussionReply) => (
                       <div key={nestedReply.id} className="mt-4 ml-6 pl-4 border-l-2 border-muted">
                         <div className="flex items-center gap-2 mb-2">
                           <CornerDownRight className="h-4 w-4 text-muted-foreground" />

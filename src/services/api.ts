@@ -1,7 +1,8 @@
 import { BASE_URL } from "@/constants";
 
-// BASE_URL might already include /api, so check and use accordingly
-const API_BASE = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
+// Normalize BASE_URL by removing trailing /api or / and then append /api
+const normalizedBase = BASE_URL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+const API_BASE = `${normalizedBase}/api`;
 
 /**
  * Generic API client for making HTTP requests
@@ -21,11 +22,17 @@ export const apiClient = {
 
     console.log('📡 API Response Status:', response.status);
     
-    let data: any;
-    try {
-      data = await response.json();
-    } catch (e) {
-      data = null;
+    const isNoContent = response.status === 204 || response.status === 205;
+    let data: any = null;
+    
+    if (!isNoContent) {
+      try {
+        data = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
     }
 
     if (!response.ok) {
@@ -50,11 +57,17 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
 
-    let responseData: any;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = null;
+    const isNoContent = response.status === 204 || response.status === 205;
+    let responseData: any = null;
+    
+    if (!isNoContent) {
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
     }
 
     if (!response.ok) {
@@ -79,11 +92,17 @@ export const apiClient = {
       body: JSON.stringify(data),
     });
 
-    let responseData: any;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = null;
+    const isNoContent = response.status === 204 || response.status === 205;
+    let responseData: any = null;
+    
+    if (!isNoContent) {
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
     }
     
     if (!response.ok) {
@@ -107,11 +126,17 @@ export const apiClient = {
       credentials: "include",
     });
 
-    let responseData: any;
-    try {
-      responseData = await response.json();
-    } catch (e) {
-      responseData = null;
+    const isNoContent = response.status === 204 || response.status === 205;
+    let responseData: any = null;
+    
+    if (!isNoContent) {
+      try {
+        responseData = await response.json();
+      } catch (e) {
+        if (response.ok) {
+          throw new Error(`Failed to parse JSON response: ${e instanceof Error ? e.message : String(e)} (Status: ${response.status})`);
+        }
+      }
     }
 
     if (!response.ok) {

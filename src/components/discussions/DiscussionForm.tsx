@@ -70,33 +70,26 @@ export function DiscussionForm() {
 
   const isGlobalDiscussion = location.pathname.startsWith('/discussions/new');
 
-  // Fetch ALL available classes
-  const { data: classesData, isLoading: classesLoading } = useQuery({
-    queryKey: ['all-classes'],
+  // Fetch available classes with server-side search
+  const { 
+    data: classesData, 
+    isLoading: classesLoading,
+    isError: classesError,
+    error: classesErrorObj,
+    refetch: refetchClasses
+  } = useQuery({
+    queryKey: ['all-classes', searchQuery],
     queryFn: async () => {
-      const response = await apiClient.get('/classes?limit=100');
-      return response;
+      const response = await apiClient.get<{ data: Class[] }>(`/classes?limit=20&search=${encodeURIComponent(searchQuery)}`);
+      return response.data;
     },
     enabled: isGlobalDiscussion,
   });
 
-  const classes = classesData?.data || [];
+  const classes = classesData || [];
 
-  // Filter classes based on search query
-  const filteredClasses = useMemo(() => {
-    if (!searchQuery.trim()) return classes;
-    
-    const query = searchQuery.toLowerCase();
-    return classes.filter((cls: Class) => {
-      const className = cls.name.toLowerCase();
-      const subjectName = cls.subject?.name?.toLowerCase() || '';
-      const subjectCode = cls.subject?.code?.toLowerCase() || '';
-      
-      return className.includes(query) || 
-             subjectName.includes(query) || 
-             subjectCode.includes(query);
-    });
-  }, [classes, searchQuery]);
+  // Since we're doing server-side search now, filteredClasses is just classes
+  const filteredClasses = classes;
 
   const createDiscussionMutation = useMutation({
     mutationFn: async () => {
@@ -248,6 +241,22 @@ export function DiscussionForm() {
                           {classesLoading ? (
                             <div className="py-4 text-center text-sm text-muted-foreground">
                               Loading classes...
+                            </div>
+                          ) : classesError ? (
+                            <div className="py-4 text-center space-y-2">
+                              <p className="text-sm text-destructive">
+                                {(classesErrorObj as Error)?.message || 'Failed to load classes'}
+                              </p>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  refetchClasses();
+                                }}
+                              >
+                                Retry
+                              </Button>
                             </div>
                           ) : filteredClasses.length === 0 ? (
                             <div className="py-4 text-center text-sm text-muted-foreground">
