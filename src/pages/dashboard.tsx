@@ -5,26 +5,13 @@ import { ClassStatusDonut } from "@/components/dashboard/v2/ClassStatusDonut";
 import { DepartmentPieChart } from "@/components/dashboard/v2/DepartmentPieChart";
 import { TopTeachersList } from "@/components/dashboard/v2/TopTeachersList";
 import { RecentClassesList } from "@/components/dashboard/v2/RecentClassesList";
-import { ClassSaturationHeatmap } from "@/components/dashboard/v2/ClassSaturationHeatmap";
-import { WeeklyScheduleDensity } from "@/components/dashboard/v2/WeeklyScheduleDensity";
 import { useSession } from "@/lib/auth-client";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, LayoutDashboard, RefreshCcw, BarChart3, Activity, Users2, Clock, ListChecks } from "lucide-react";
+import { CalendarDays, LayoutDashboard, RefreshCcw, BarChart3, Activity, Users2, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useQueryClient } from "@tanstack/react-query";
-
-const SectionHeader = ({ icon: Icon, title, description }: { icon: any, title: string, description: string }) => (
-  <div className="flex flex-col gap-1 mb-6">
-    <div className="flex items-center gap-2">
-      <div className="p-1.5 rounded-md bg-primary/10 text-primary">
-        <Icon className="h-4 w-4" />
-      </div>
-      <h2 className="text-xl font-bold tracking-tight">{title}</h2>
-    </div>
-    <p className="text-sm text-muted-foreground ml-8">{description}</p>
-  </div>
-);
+import { SectionHeader } from "@/components/section-header";
 
 const Dashboard = () => {
   const { data: session } = useSession();
@@ -111,21 +98,6 @@ const Dashboard = () => {
         {/* Row 3: Departmental Breakdown (Full Width) */}
         <div className="w-full">
             <DepartmentTrendLineChart />
-        </div>
-      </section>
-
-      <Separator className="opacity-50" />
-
-      {/* --- MODULE 3: OPERATIONAL FLOW --- */}
-      <section>
-        <SectionHeader 
-          icon={Clock} 
-          title="Operational Scheduling & Capacity" 
-          description="Real-time heatmap of class density and saturation levels across the facility."
-        />
-        <div className="flex flex-col gap-8">
-            <WeeklyScheduleDensity />
-            <ClassSaturationHeatmap />
         </div>
       </section>
 
