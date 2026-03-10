@@ -94,6 +94,8 @@ export interface ScheduleHeatmapData {
   className: string;
   subjectName: string;
   subjectCode: string;
+  departmentCode: string | null;
+  departmentName: string | null;
   teacherName: string;
   teacherImage: string | null;
   day: string;

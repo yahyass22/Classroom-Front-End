@@ -1,276 +1,625 @@
 import * as React from "react";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
 import { useScheduleHeatmap } from "@/hooks/useDashboard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { Clock, Calendar, MapPin, MoreHorizontal, Filter, Search } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuCheckboxItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { ChevronLeft, ChevronRight, Search, Clock, User, Calendar as CalendarIcon, RotateCcw } from "lucide-react";
 
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-const DAY_ABBREVS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+const START_HOUR = 8;
+const END_HOUR = 17;
+const SLOT_BASE_HEIGHT_COMFORTABLE = 52;
+const SLOT_BASE_HEIGHT_COMPACT = 42;
+const SLOT_GRID_COLUMNS = 4;
+const SLOT_ROW_HEIGHT = 30;
+const SLOT_ROW_GAP = 3;
+const SLOT_VERTICAL_PADDING = 6;
 
 interface RoutineItem {
   classId: number;
   className: string;
   subjectName: string;
   subjectCode: string;
+  departmentCode: string | null;
+  departmentName: string | null;
   teacherName: string;
   teacherImage: string | null;
   day: string;
-  startTime: string; 
-  endTime: string;   
+  startTime: string;
+  endTime: string;
 }
 
-/**
- * Modern Theme Palette
- * Automatically adapts to Light/Dark modes
- */
-const DEPT_THEMES: Record<string, { primary: string, bg: string, border: string, badge: string }> = {
-  CS: { 
-    primary: "text-blue-600 dark:text-blue-400", 
-    bg: "bg-blue-50/50 dark:bg-blue-900/10", 
-    border: "border-blue-200 dark:border-blue-800",
-    badge: "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300"
-  },
-  MATH: { 
-    primary: "text-purple-600 dark:text-purple-400", 
-    bg: "bg-purple-50/50 dark:bg-purple-900/10", 
-    border: "border-purple-200 dark:border-purple-800",
-    badge: "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300"
-  },
-  PHYS: { 
-    primary: "text-amber-600 dark:text-amber-400", 
-    bg: "bg-amber-50/50 dark:bg-amber-900/10", 
-    border: "border-amber-200 dark:border-amber-800",
-    badge: "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300"
-  },
-  CHEM: { 
-    primary: "text-emerald-600 dark:text-emerald-400", 
-    bg: "bg-emerald-50/50 dark:bg-emerald-900/10", 
-    border: "border-emerald-200 dark:border-emerald-800",
-    badge: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300"
-  },
-  ENG: { 
-    primary: "text-rose-600 dark:text-rose-400", 
-    bg: "bg-rose-50/50 dark:bg-rose-900/10", 
-    border: "border-rose-200 dark:border-rose-800",
-    badge: "bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300"
-  },
-  BIO: { 
-    primary: "text-green-600 dark:text-green-400", 
-    bg: "bg-green-50/50 dark:bg-green-900/10", 
-    border: "border-green-200 dark:border-green-800",
-    badge: "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-  },
-  DEFAULT: { 
-    primary: "text-slate-600 dark:text-slate-400", 
-    bg: "bg-slate-50/50 dark:bg-slate-900/10", 
-    border: "border-slate-200 dark:border-slate-800",
-    badge: "bg-slate-100 text-slate-700 dark:bg-slate-900/40 dark:text-slate-300"
-  },
+interface DepartmentGroup {
+  departmentCode: string;
+  departmentName: string;
+  items: RoutineItem[];
+  codes: string[];
+}
+
+const DEPT_MAP: Record<string, string> = {
+  "COMPUTER SCIENCE": "bg-sky-400 text-white border-sky-500 dark:bg-sky-500",
+  "CS": "bg-sky-400 text-white border-sky-500 dark:bg-sky-500",
+  "MATHEMATICS": "bg-indigo-400 text-white border-indigo-500 dark:bg-indigo-500",
+  "MATH": "bg-indigo-400 text-white border-indigo-500 dark:bg-indigo-500",
+  "PHYSICS": "bg-purple-400 text-white border-purple-500 dark:bg-purple-500",
+  "PHYS": "bg-purple-400 text-white border-purple-500 dark:bg-purple-500",
+  "CHEMISTRY": "bg-pink-400 text-white border-pink-500 dark:bg-pink-500",
+  "CHEM": "bg-pink-400 text-white border-pink-500 dark:bg-pink-500",
+  "BIOLOGY": "bg-green-400 text-white border-green-500 dark:bg-green-500",
+  "BIO": "bg-green-400 text-white border-green-500 dark:bg-green-500",
+  "ENGLISH": "bg-rose-400 text-white border-rose-500 dark:bg-rose-500",
+  "ENG": "bg-rose-400 text-white border-rose-500 dark:bg-rose-500",
+  "HISTORY": "bg-orange-400 text-white border-orange-500 dark:bg-orange-500",
+  "HIST": "bg-orange-400 text-white border-orange-500 dark:bg-orange-500",
+  "GEOGRAPHY": "bg-teal-400 text-white border-teal-500 dark:bg-teal-500",
+  "GEOG": "bg-teal-400 text-white border-teal-500 dark:bg-teal-500",
+  "ECONOMICS": "bg-yellow-400 text-yellow-950 border-yellow-500 dark:bg-yellow-500 dark:text-yellow-50",
+  "ECON": "bg-yellow-400 text-yellow-950 border-yellow-500 dark:bg-yellow-500 dark:text-yellow-50",
+  "BUSINESS ADMINISTRATION": "bg-slate-400 text-white border-slate-500 dark:bg-slate-500",
+  "BUSINESS ADMIN": "bg-slate-400 text-white border-slate-500 dark:bg-slate-500",
+  "ENGINEERING": "bg-blue-400 text-white border-blue-500 dark:bg-blue-500",
+  "ENGR": "bg-blue-400 text-white border-blue-500 dark:bg-blue-500",
+  "PSYCHOLOGY": "bg-violet-400 text-white border-violet-500 dark:bg-violet-500",
+  "PSY": "bg-violet-400 text-white border-violet-500 dark:bg-violet-500",
+  "SOCIOLOGY": "bg-fuchsia-400 text-white border-fuchsia-500 dark:bg-fuchsia-500",
+  "SOC": "bg-fuchsia-400 text-white border-fuchsia-500 dark:bg-fuchsia-500",
+  "POLITICAL SCIENCE": "bg-red-400 text-white border-red-500 dark:bg-red-500",
+  "POLS": "bg-red-400 text-white border-red-500 dark:bg-red-500",
+  "PHILOSOPHY": "bg-lime-400 text-lime-950 border-lime-500 dark:bg-lime-500 dark:text-lime-50",
+  "PHIL": "bg-lime-400 text-lime-950 border-lime-500 dark:bg-lime-500 dark:text-lime-50",
+  "EDUCATION": "bg-cyan-400 text-cyan-950 border-cyan-500 dark:bg-cyan-500 dark:text-cyan-50",
+  "EDUC": "bg-cyan-400 text-cyan-950 border-cyan-500 dark:bg-cyan-500 dark:text-cyan-50",
+  "FINE ARTS": "bg-red-300 text-red-950 border-red-400 dark:bg-red-400 dark:text-red-50",
+  "ART": "bg-red-300 text-red-950 border-red-400 dark:bg-red-400 dark:text-red-50",
+  "MUSIC": "bg-rose-300 text-rose-950 border-rose-400 dark:bg-rose-400 dark:text-rose-50",
+  "MUS": "bg-rose-300 text-rose-950 border-rose-400 dark:bg-rose-400 dark:text-rose-50",
+  "PHYSICAL EDUCATION": "bg-amber-400 text-amber-950 border-amber-500 dark:bg-amber-500 dark:text-amber-50",
+  "PE": "bg-amber-400 text-amber-950 border-amber-500 dark:bg-amber-500 dark:text-amber-50",
+  "LAW": "bg-white text-slate-950 border-slate-200 dark:bg-slate-100 dark:text-slate-950",
 };
 
-const getTheme = (code: string) => {
-  const prefix = code.replace(/[0-9]/g, '');
-  return DEPT_THEMES[prefix] || DEPT_THEMES.DEFAULT;
+const toMinutes = (time: string) => {
+  const [h, m] = time.split(":").map(Number);
+  return h * 60 + m;
+};
+
+const getWeekStartMonday = (date: Date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const addDays = (date: Date, days: number) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+};
+
+const fmtDayNumber = (date: Date) => date.getDate().toString();
+
+const getWeekOfMonth = (date: Date) => {
+  const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+  const startDay = startOfMonth.getDay();
+  return Math.ceil((date.getDate() + startDay) / 7);
+};
+
+const fmtDribbbleRange = (weekStart: Date) => {
+  const weekEnd = addDays(weekStart, 4);
+  const startMonth = weekStart.toLocaleDateString("en-US", { month: "short" });
+  const endMonth = weekEnd.toLocaleDateString("en-US", { month: "short" });
+  const weekNum = getWeekOfMonth(weekStart);
+  
+  return {
+    range: `${startMonth} ${weekStart.getDate()} - ${endMonth} ${weekEnd.getDate()}`,
+    label: `Week ${weekNum}, ${weekStart.getFullYear()}`
+  };
+};
+
+const getTheme = (departmentName?: string | null, departmentCode?: string | null, subjectCode?: string) => {
+  const name = (departmentName || "").toUpperCase().trim();
+  const code = (departmentCode || "").toUpperCase().trim();
+  const fallback = (subjectCode || "").replace(/[0-9]/g, "").toUpperCase().trim();
+
+  const themeClasses = DEPT_MAP[name] || DEPT_MAP[code] || DEPT_MAP[fallback];
+
+  if (themeClasses) {
+    return cn("shadow-sm hover:brightness-110 transition-all duration-200", themeClasses);
+  }
+
+  return "bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
+};
+
+const groupByDepartment = (items: RoutineItem[]) => {
+  const groups = new Map<string, DepartmentGroup>();
+
+  items.forEach((item) => {
+    const fallbackPrefix = item.subjectCode.replace(/[0-9]/g, "").toUpperCase();
+    const departmentCode = (item.departmentCode || fallbackPrefix || "DEFAULT").toUpperCase();
+    const departmentName = item.departmentName || departmentCode;
+
+    if (!groups.has(departmentCode)) {
+      groups.set(departmentCode, {
+        departmentCode,
+        departmentName,
+        items: [],
+        codes: [],
+      });
+    }
+
+    const group = groups.get(departmentCode)!;
+    group.items.push(item);
+    if (!group.codes.includes(item.subjectCode)) {
+      group.codes.push(item.subjectCode);
+    }
+  });
+
+  return Array.from(groups.values()).sort((a, b) => a.departmentCode.localeCompare(b.departmentCode));
+};
+
+const getCapsuleColSpan = (codesCount: number) => {
+  if (codesCount <= 1) return 1;
+  if (codesCount <= 2) return 2;
+  if (codesCount <= 4) return 3;
+  return 4;
+};
+
+const estimateRowsForCapsules = (spans: number[]) => {
+  if (spans.length === 0) return 1;
+
+  let rows = 1;
+  let used = 0;
+
+  spans.forEach((rawSpan) => {
+    const span = Math.max(1, Math.min(rawSpan, SLOT_GRID_COLUMNS));
+    if (used + span > SLOT_GRID_COLUMNS) {
+      rows += 1;
+      used = span;
+      return;
+    }
+    used += span;
+  });
+
+  return rows;
 };
 
 export function WeeklyScheduleDensity() {
   const { data, isLoading } = useScheduleHeatmap();
+
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedDepts, setSelectedDepts] = React.useState<string[]>([]);
-  
-  const routineData = React.useMemo(() => (Array.isArray(data) ? (data as RoutineItem[]) : []), [data]);
+  const [focusDept, setFocusDept] = React.useState<string>("all");
+  const [density, setDensity] = React.useState<"comfortable" | "compact">("compact");
+  const [weekStart, setWeekStart] = React.useState<Date>(() => getWeekStartMonday(new Date()));
+  const [currentTime, setCurrentTime] = React.useState(new Date());
 
-  // Extract unique departments for filter
-  const allDepartments = React.useMemo(() => {
-    const depts = new Set<string>();
-    routineData.forEach(cls => depts.add(cls.subjectCode.replace(/[0-9]/g, '')));
-    return Array.from(depts);
-  }, [routineData]);
+  React.useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
 
-  // Filter Logic
-  const filteredData = React.useMemo(() => {
-    return routineData.filter(cls => {
-      const matchesSearch = cls.className.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                            cls.subjectName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            cls.teacherName.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      const dept = cls.subjectCode.replace(/[0-9]/g, '');
-      const matchesDept = selectedDepts.length === 0 || selectedDepts.includes(dept);
-
-      return matchesSearch && matchesDept;
-    });
-  }, [routineData, searchQuery, selectedDepts]);
-
-  const toggleDept = (dept: string) => {
-    setSelectedDepts(prev => 
-      prev.includes(dept) ? prev.filter(d => d !== dept) : [...prev, dept]
-    );
+  const handleJumpToToday = () => {
+    setWeekStart(getWeekStartMonday(new Date()));
   };
 
-  if (isLoading) return <Skeleton className="h-[800px] w-full rounded-[3rem]" />;
+  const weekInfo = fmtDribbbleRange(weekStart);
+
+  const slotBaseHeight = density === "compact" ? SLOT_BASE_HEIGHT_COMPACT : SLOT_BASE_HEIGHT_COMFORTABLE;
+  const capsuleMinHeight = density === "compact" ? 24 : 30;
+  const rowGap = density === "compact" ? 4 : 5;
+  const slotVerticalPadding = density === "compact" ? 8 : 10;
+  const capsuleTextClass = density === "compact" ? "text-[10px] font-bold" : "text-[11px] font-bold";
+  const capsulePaddingClass = density === "compact" ? "px-2 py-0.5" : "px-2.5 py-1";
+
+  const routineData = React.useMemo(() => {
+    const source = Array.isArray(data) ? (data as RoutineItem[]) : [];
+    const seen = new Set<string>();
+    const unique: RoutineItem[] = [];
+
+    source.forEach((item) => {
+      const key = `${item.classId}-${item.day}-${item.startTime}-${item.endTime}-${item.subjectCode}`;
+      if (seen.has(key)) return;
+
+      const start = toMinutes(item.startTime);
+      const end = toMinutes(item.endTime);
+      const minStart = START_HOUR * 60;
+      const maxEnd = END_HOUR * 60;
+      if (start < minStart || end > maxEnd || !DAYS.includes(item.day)) return;
+
+      seen.add(key);
+      unique.push(item);
+    });
+
+    return unique;
+  }, [data]);
+
+  const allDepts = React.useMemo(() => {
+    const depts = new Set<string>();
+    routineData.forEach(item => {
+      const code = (item.departmentCode || item.subjectCode.replace(/[0-9]/g, "")).toUpperCase();
+      if (code) depts.add(code);
+    });
+    return Array.from(depts).sort();
+  }, [routineData]);
+
+  const filteredData = React.useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    return routineData.filter((item) => {
+      if (!q) return true;
+      return (
+        item.className.toLowerCase().includes(q) ||
+        item.subjectCode.toLowerCase().includes(q) ||
+        item.teacherName.toLowerCase().includes(q)
+      );
+    });
+  }, [routineData, searchQuery]);
+
+  const slotsByDay = React.useMemo(() => {
+    const map = new Map<string, Map<string, RoutineItem[]>>();
+    DAYS.forEach((day) => map.set(day, new Map<string, RoutineItem[]>()));
+
+    filteredData.forEach((item) => {
+      const key = `${item.startTime}-${item.endTime}`;
+      const dayMap = map.get(item.day);
+      if (!dayMap) return;
+      if (!dayMap.has(key)) dayMap.set(key, []);
+      dayMap.get(key)!.push(item);
+    });
+
+    return map;
+  }, [filteredData]);
+
+  const timeKeys = React.useMemo(() => {
+    const set = new Set<string>();
+    DAYS.forEach((day) => {
+      const dayMap = slotsByDay.get(day);
+      if (!dayMap) return;
+      dayMap.forEach((_, key) => set.add(key));
+    });
+
+    return Array.from(set).sort((a, b) => {
+      const [aStart, aEnd] = a.split("-");
+      const [bStart, bEnd] = b.split("-");
+      const byStart = toMinutes(aStart) - toMinutes(bStart);
+      if (byStart !== 0) return byStart;
+      return toMinutes(aEnd) - toMinutes(bEnd);
+    });
+  }, [slotsByDay]);
+
+  const rowHeights = React.useMemo(() => {
+    const heights: Record<string, number> = {};
+
+    timeKeys.forEach((key) => {
+      let maxRows = 1;
+
+      DAYS.forEach((day) => {
+        const items = slotsByDay.get(day)?.get(key) || [];
+        const orderedGroups = groupByDepartment(items).sort((a, b) => {
+          const spanDiff = getCapsuleColSpan(b.codes.length) - getCapsuleColSpan(a.codes.length);
+          if (spanDiff !== 0) return spanDiff;
+          return a.departmentCode.localeCompare(b.departmentCode);
+        });
+
+        const spans = orderedGroups.map((group) => getCapsuleColSpan(group.codes.length));
+        const rows = estimateRowsForCapsules(spans);
+        maxRows = Math.max(maxRows, rows || 1);
+      });
+
+      const effectiveRowHeight = Math.max(SLOT_ROW_HEIGHT, capsuleMinHeight + 2);
+      const effectiveRowGap = Math.max(SLOT_ROW_GAP, rowGap);
+      const dynamicHeight =
+        maxRows * effectiveRowHeight +
+        Math.max(0, maxRows - 1) * effectiveRowGap +
+        Math.max(SLOT_VERTICAL_PADDING, slotVerticalPadding);
+
+      heights[key] = Math.max(slotBaseHeight, dynamicHeight);
+    });
+
+    return heights;
+  }, [timeKeys, slotsByDay, slotBaseHeight, capsuleMinHeight, rowGap, slotVerticalPadding]);
+
+  const livePulsePosition = React.useMemo(() => {
+    const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+    let accumulatedHeight = 16 * 4;
+
+    for (const key of timeKeys) {
+      const [start, end] = key.split("-").map(toMinutes);
+      if (nowMinutes >= start && nowMinutes <= end) {
+        const progress = (nowMinutes - start) / (end - start);
+        return accumulatedHeight + progress * rowHeights[key];
+      }
+      accumulatedHeight += rowHeights[key];
+    }
+    return null;
+  }, [currentTime, timeKeys, rowHeights]);
+
+  const weekDates = React.useMemo(() => DAYS.map((_, index) => addDays(weekStart, index)), [weekStart]);
+
+  if (isLoading) {
+    return <Skeleton className="h-[720px] w-full rounded-3xl" />;
+  }
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in duration-700 w-full">
-      
-      {/* --- CONTROL BAR --- */}
-      <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between px-2">
-        <div>
-            <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
-                <Calendar className="h-8 w-8 text-primary" />
-                Weekly Board
-            </h1>
-            <p className="text-muted-foreground font-medium text-sm mt-1">
-                {routineData.length} total sessions • {filteredData.length} visible
-            </p>
-        </div>
+    <TooltipProvider>
+      <section className="space-y-6">
+        <div className="bg-card/40 backdrop-blur-xl p-5 rounded-[2rem] border border-border shadow-md space-y-6">
+          <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-center justify-between">
+            <div className="flex items-center gap-4 bg-background/50 p-1.5 rounded-2xl border border-border shadow-inner group">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-xl hover:bg-background hover:shadow-md transition-all active:scale-90"
+                onClick={() => setWeekStart((prev) => addDays(prev, -7))}
+              >
+                <ChevronLeft className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </Button>
 
-        <div className="flex items-center gap-3 w-full md:w-auto">
-            <div className="relative flex-1 md:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                    placeholder="Filter classes..." 
-                    className="pl-9 bg-card/50 border-border/50 rounded-xl"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                />
+              <div className="px-4 text-center min-w-[160px]">
+                <div className="flex items-center justify-center gap-2">
+                   <span className="h-1.5 w-1.5 rounded-full bg-rose-500 animate-pulse" />
+                   <h4 className="text-[13px] font-black tracking-tight text-foreground">{weekInfo.range}</h4>
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{weekInfo.label}</p>
+              </div>
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-10 w-10 rounded-xl hover:bg-background hover:shadow-md transition-all active:scale-90"
+                onClick={() => setWeekStart((prev) => addDays(prev, 7))}
+              >
+                <ChevronRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </Button>
             </div>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" className="gap-2 rounded-xl border-dashed">
-                        <Filter className="h-4 w-4" />
-                        Department
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 rounded-xl">
-                    {allDepartments.map(dept => (
-                        <DropdownMenuCheckboxItem 
-                            key={dept}
-                            checked={selectedDepts.includes(dept)}
-                            onCheckedChange={() => toggleDept(dept)}
-                        >
-                            {dept}
-                        </DropdownMenuCheckboxItem>
-                    ))}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
-      </div>
 
-      {/* --- KANBAN BOARD CONTAINER --- */}
-      <ScrollArea className="w-full whitespace-nowrap rounded-[2.5rem] border border-border/40 bg-card/10 backdrop-blur-xl shadow-2xl">
-        <div className="flex w-max space-x-6 p-8">
-            {DAYS.map((day, idx) => {
-                const dayClasses = filteredData
-                    .filter(item => item.day === day)
-                    .sort((a, b) => a.startTime.localeCompare(b.startTime));
-                
-                const isToday = new Date().toLocaleDateString('en-US', { weekday: 'long' }) === day;
+            <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleJumpToToday}
+                className="h-11 rounded-2xl border-border bg-background/50 hover:bg-background px-5 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 shadow-sm"
+              >
+                <RotateCcw className="h-3.5 w-3.5 mr-2" />
+                Go to Today
+              </Button>
+
+              <div className="relative flex-1 sm:min-w-[300px]">
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/50" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-11 rounded-2xl border-border/80 bg-background/40 pl-11 text-xs font-bold placeholder:font-medium shadow-inner focus-visible:ring-primary/30 focus-visible:bg-background transition-all"
+                  placeholder="Quick filter classes, teachers or codes..."
+                />
+              </div>
+
+              <div className="flex bg-muted/60 p-1 rounded-2xl border border-border/50 shadow-inner h-11 items-center">
+                <Button
+                  variant={density === "compact" ? "secondary" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "h-9 rounded-xl text-[10px] font-black uppercase px-5 transition-all",
+                    density === "compact" ? "bg-background shadow-md text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setDensity("compact")}
+                >
+                  Compact
+                </Button>
+                <Button
+                  variant={density === "comfortable" ? "secondary" : "ghost"}
+                  size="sm"
+                  className={cn(
+                    "h-9 rounded-xl text-[10px] font-black uppercase px-5 transition-all",
+                    density === "comfortable" ? "bg-background shadow-md text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  onClick={() => setDensity("comfortable")}
+                >
+                  Comfortable
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 pt-4 border-t border-border/40">
+            <div className="flex items-center gap-2 px-1">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/40">Department Focus Mode</span>
+            </div>
+            <div className="flex flex-wrap gap-2.5">
+              <Button
+                variant={focusDept === "all" ? "secondary" : "ghost"}
+                size="sm"
+                className={cn(
+                  "h-10 rounded-xl text-[11px] font-black uppercase px-6 transition-all duration-300 border-2 shadow-sm",
+                  focusDept === "all" 
+                    ? "bg-foreground text-background border-foreground shadow-lg scale-105" 
+                    : "bg-background/50 border-border text-muted-foreground hover:border-foreground hover:bg-background hover:text-foreground hover:-translate-y-0.5 active:scale-95"
+                )}
+                onClick={() => setFocusDept("all")}
+              >
+                Full Overview
+              </Button>
+              {allDepts.map(dept => {
+                const themeClasses = DEPT_MAP[dept] || "bg-slate-400 text-white";
+                const colorBase = themeClasses.split(" ")[0].replace("bg-", "");
 
                 return (
-                    <div key={day} className="w-[320px] flex-none flex flex-col gap-4">
-                        
-                        {/* Day Header */}
-                        <div className={cn(
-                            "flex items-center justify-between p-4 rounded-2xl border-2 transition-all",
-                            isToday 
-                                ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20" 
-                                : "bg-card/40 border-border/50 text-foreground"
-                        )}>
-                            <div>
-                                <span className="text-sm font-black uppercase tracking-wider block">{DAY_ABBREVS[idx]}</span>
-                                <span className={cn("text-[10px] font-bold uppercase tracking-widest opacity-60", isToday ? "text-primary-foreground" : "text-muted-foreground")}>
-                                    {dayClasses.length} Sessions
-                                </span>
-                            </div>
-                            {isToday && <div className="h-2 w-2 rounded-full bg-white animate-pulse" />}
-                        </div>
-
-                        {/* Class Cards Stack */}
-                        <div className="flex flex-col gap-3 min-h-[400px]">
-                            {dayClasses.map((cls) => {
-                                const theme = getTheme(cls.subjectCode);
-                                return (
-                                    <div 
-                                        key={cls.classId}
-                                        className={cn(
-                                            "group relative flex flex-col gap-3 p-5 rounded-[1.5rem] border bg-card/80 hover:bg-card hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer whitespace-normal",
-                                            theme.border
-                                        )}
-                                    >
-                                        <div className="flex items-center justify-between">
-                                            <Badge variant="secondary" className={cn("rounded-lg px-2 py-0.5 text-[10px] font-black tracking-tighter", theme.badge)}>
-                                                {cls.subjectCode}
-                                            </Badge>
-                                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-muted -mr-2">
-                                                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                                            </Button>
-                                        </div>
-
-                                        <div>
-                                            <h4 className="text-sm font-bold leading-tight text-foreground/90 line-clamp-2">
-                                                {cls.className}
-                                            </h4>
-                                            <p className="text-[11px] text-muted-foreground font-medium mt-1 line-clamp-1">
-                                                {cls.subjectName}
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 pt-3 border-t border-border/40">
-                                            <Avatar className="h-8 w-8 border border-background shadow-sm">
-                                                <AvatarImage src={cls.teacherImage || undefined} />
-                                                <AvatarFallback className="text-[10px] font-black bg-muted">{cls.teacherName.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div className="flex flex-col">
-                                                <span className="text-[10px] font-bold text-foreground leading-none">{cls.teacherName}</span>
-                                                <span className="text-[9px] text-muted-foreground">Instructor</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center justify-between mt-1 bg-muted/20 p-2 rounded-xl">
-                                            <div className={cn("flex items-center gap-1.5 text-[10px] font-black", theme.primary)}>
-                                                <Clock className="h-3 w-3" />
-                                                {cls.startTime} - {cls.endTime}
-                                            </div>
-                                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
-                                                <MapPin className="h-3 w-3" />
-                                                402
-                                            </div>
-                                        </div>
-
-                                        {/* Colored Accent Line */}
-                                        <div className={cn("absolute left-0 top-6 bottom-6 w-1 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity", theme.bg.split(' ')[0].replace('/50', ''))} />
-                                    </div>
-                                );
-                            })}
-
-                            {dayClasses.length === 0 && (
-                                <div className="flex-1 flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/30 rounded-[1.5rem] opacity-50">
-                                    <Calendar className="h-8 w-8 text-muted-foreground mb-2" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Free Day</span>
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                  <Button
+                    key={dept}
+                    variant={focusDept === dept ? "secondary" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "h-10 rounded-xl text-[11px] font-black uppercase px-4 transition-all duration-300 border-2",
+                      focusDept === dept 
+                        ? cn(themeClasses, "border-transparent shadow-xl scale-110 z-10 -translate-y-1") 
+                        : cn(
+                            "bg-background/40 border-border/80 text-muted-foreground/90",
+                            `hover:border-${colorBase} hover:bg-${colorBase}/10 hover:text-foreground hover:-translate-y-1 hover:shadow-md active:scale-95`
+                          )
+                    )}
+                    onClick={() => setFocusDept(dept)}
+                  >
+                    {dept}
+                  </Button>
                 );
-            })}
-            <ScrollBar orientation="horizontal" />
+              })}
+            </div>
+          </div>
         </div>
-      </ScrollArea>
-    </div>
+
+        <div className="rounded-2xl border border-border bg-card/30 backdrop-blur-sm shadow-sm overflow-hidden relative">
+          {livePulsePosition && (
+            <div 
+              className="absolute left-0 right-0 h-px bg-rose-500 z-30 pointer-events-none flex items-center"
+              style={{ top: `${livePulsePosition}px` }}
+            >
+              <div className="h-2 w-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] absolute left-0 md:left-20" />
+            </div>
+          )}
+
+          <div className="flex overflow-x-auto no-scrollbar">
+            <div className="w-20 shrink-0 border-r border-border bg-muted/30 relative z-40">
+              <div className="h-16 border-b border-border sticky top-0 bg-muted/40 backdrop-blur-md z-50 flex items-center justify-center">
+                 <Clock className="h-4 w-4 text-muted-foreground" />
+              </div>
+              {timeKeys.map((key) => {
+                const [start, end] = key.split("-");
+                const isLive = livePulsePosition !== null && (() => {
+                   const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+                   const [s, e] = key.split("-").map(toMinutes);
+                   return nowMinutes >= s && nowMinutes <= e;
+                })();
+
+                return (
+                  <div key={key} className={cn(
+                    "relative flex flex-col justify-center border-b border-border px-3 transition-colors",
+                    isLive ? "bg-rose-500/10" : ""
+                  )} style={{ height: rowHeights[key] }}>
+                    <div className={cn("text-[11px] font-black tracking-tighter", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</div>
+                    <div className="text-[9px] font-bold text-muted-foreground leading-none">{end}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex min-w-0 flex-1 relative">
+              {DAYS.map((day, dayIndex) => (
+                <div key={day} className="flex min-w-[140px] flex-1 flex-col border-r border-border last:border-r-0">
+                  <div className="flex h-16 flex-col items-center justify-center border-b border-border bg-muted/20 sticky top-0 z-30 backdrop-blur-md">
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{day.substring(0, 3)}</span>
+                    <span className="text-base font-black text-foreground">{fmtDayNumber(weekDates[dayIndex])}</span>
+                  </div>
+
+                  {timeKeys.map((key) => {
+                    const items = slotsByDay.get(day)?.get(key) || [];
+                    const orderedGroups = groupByDepartment(items).sort((a, b) => {
+                      const spanDiff = getCapsuleColSpan(b.codes.length) - getCapsuleColSpan(a.codes.length);
+                      if (spanDiff !== 0) return spanDiff;
+                      return a.departmentCode.localeCompare(b.departmentCode);
+                    });
+
+                    return (
+                      <div 
+                        key={`${day}-${key}`} 
+                        className={cn(
+                          "border-b border-border p-1.5 transition-colors relative",
+                          items.length === 0 ? "bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] opacity-40" : "hover:bg-muted/5"
+                        )} 
+                        style={{ height: rowHeights[key] }}
+                      >
+                        {items.length > 0 ? (
+                          <div
+                            className="grid content-start h-full"
+                            style={{
+                              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                              gap: `${rowGap}px`,
+                              gridAutoRows: `minmax(${capsuleMinHeight}px, auto)`,
+                              gridAutoFlow: "dense",
+                            }}
+                          >
+                            {orderedGroups.map((group) => {
+                              const theme = getTheme(group.departmentName, group.departmentCode, group.codes[0]);
+                              const span = getCapsuleColSpan(group.codes.length);
+                              const isFocused = focusDept === "all" || group.departmentCode === focusDept;
+
+                              return (
+                                <Tooltip key={`${day}-${key}-${group.departmentCode}`}>
+                                  <TooltipTrigger asChild>
+                                    <div
+                                      className={cn(
+                                        "inline-flex min-h-0 w-fit max-w-full cursor-pointer items-center justify-start rounded-xl border-l-[5px] font-black tracking-tight shadow-md transition-all duration-300 border-r-2 border-t-2 border-b-2",
+                                        capsulePaddingClass,
+                                        capsuleTextClass,
+                                        theme,
+                                        !isFocused ? "opacity-15 grayscale-[0.9] scale-[0.95] blur-[1px] border-border" : "hover:scale-105 hover:shadow-xl hover:z-20 hover:-translate-y-0.5"
+                                      )}
+                                      style={{ gridColumn: `span ${span} / span ${span}` }}
+                                    >
+                                      <div className="whitespace-normal break-words leading-tight">{group.codes.join(" · ")}</div>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent className="w-64 rounded-xl border border-border/50 bg-card p-3 shadow-xl backdrop-blur-xl z-[100]">
+                                    <div className="space-y-3">
+                                      <div className="flex items-center justify-between">
+                                        <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
+                                          {group.departmentCode}
+                                        </Badge>
+                                        <div className="flex items-center gap-1.5 text-muted-foreground">
+                                          <Clock className="h-3 w-3" />
+                                          <span className="text-[10px] font-bold uppercase tracking-wider">{key.replace("-", " - ")}</span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <p className="text-xs font-black tracking-tight text-foreground leading-tight">{group.departmentName}</p>
+                                        <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                                          {group.items.length} active session{group.items.length > 1 ? "s" : ""}
+                                        </p>
+                                      </div>
+                                      
+                                      <div className="pt-2 border-t border-border/50">
+                                        {group.items.slice(0, 3).map((item, idx) => (
+                                          <div key={idx} className="flex flex-col mb-2 last:mb-0">
+                                            <div className="flex items-center gap-1.5">
+                                               <span className="text-[10px] font-bold text-foreground">{item.subjectCode}</span>
+                                               <span className="text-[10px] text-muted-foreground truncate opacity-80">{item.className}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1 mt-0.5">
+                                               <User className="h-2.5 w-2.5 text-muted-foreground" />
+                                               <span className="text-[9px] font-medium text-muted-foreground">{item.teacherName}</span>
+                                            </div>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              );
+                            })}
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </TooltipProvider>
   );
 }
