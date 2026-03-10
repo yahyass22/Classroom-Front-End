@@ -6,16 +6,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  MessageSquare, 
-  Eye, 
-  Pin, 
-  Lock, 
+import { cn } from "@/lib/utils";
+import {
+  MessageSquare,
+  Eye,
+  Pin,
   Clock,
-  Plus
+  Plus,
+  Megaphone,
+  HelpCircle,
+  FileText,
+  MessageCircle,
 } from "lucide-react";
 import { Link, useParams } from "react-router";
-import { formatDistanceToNow } from "date-fns";
 
 interface Discussion {
   id: number;
@@ -49,18 +52,44 @@ interface DiscussionsListProps {
   sortBy?: string;
 }
 
-const typeColors: Record<string, string> = {
-  general: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  question: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  announcement: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  resource: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+const typeConfigs: Record<string, { label: string; icon: any; className: string }> = {
+  general: {
+    label: 'General',
+    icon: MessageCircle,
+    className: 'bg-muted/50 text-muted-foreground border-muted-foreground/20'
+  },
+  question: {
+    label: 'Question',
+    icon: HelpCircle,
+    className: 'bg-primary/10 text-primary border-primary/20'
+  },
+  announcement: {
+    label: 'Announcement',
+    icon: Megaphone,
+    className: 'bg-primary text-primary-foreground border-primary shadow-sm'
+  },
+  resource: {
+    label: 'Resource',
+    icon: FileText,
+    className: 'bg-muted/80 text-foreground border-border'
+  },
 };
 
-const typeLabels: Record<string, string> = {
-  general: 'General',
-  question: 'Question',
-  announcement: 'Announcement',
-  resource: 'Resource',
+// Helper function to format timestamp simply
+const formatTimestamp = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMins / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
 // Main component that handles both global and class-specific discussions
@@ -75,8 +104,6 @@ export function DiscussionsList({ classId, filterType = 'all', sortBy = 'lastAct
         ? `/classes/${resolvedClassId}/discussions?type=${filterType}&sortBy=${sortBy}&limit=50`
         : `/discussions?type=${filterType}&sortBy=${sortBy}&limit=50`;
       const response = await apiClient.get(endpoint);
-      // Backend returns { data: discussions[], pagination: {...} }
-      // Extract the discussions array from the response
       return response.data || [];
     },
   });
@@ -91,16 +118,24 @@ export function DiscussionsList({ classId, filterType = 'all', sortBy = 'lastAct
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="animate-pulse">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-4">
-                <div className="h-12 w-12 bg-muted rounded" />
+          <Card key={i} className="animate-pulse border-border/50">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-4 p-3.5">
+                <div className="h-11 w-11 bg-muted rounded-full flex-shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-muted rounded w-3/4" />
-                  <div className="h-3 bg-muted rounded w-full" />
-                  <div className="h-3 bg-muted rounded w-2/3" />
+                  <div className="flex gap-2">
+                    <div className="h-5 w-16 bg-muted rounded" />
+                    <div className="h-5 w-20 bg-muted rounded" />
+                  </div>
+                  <div className="h-5 bg-muted rounded w-3/4" />
+                  <div className="h-4 bg-muted rounded w-1/3" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <div className="h-4 w-10 bg-muted rounded" />
+                  <div className="h-4 w-10 bg-muted rounded" />
+                  <div className="h-4 w-12 bg-muted rounded" />
                 </div>
               </div>
             </CardContent>
@@ -112,12 +147,14 @@ export function DiscussionsList({ classId, filterType = 'all', sortBy = 'lastAct
 
   if (discussions.length === 0) {
     return (
-      <Card className="border-dashed">
+      <Card className="border-dashed border-2">
         <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-          <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-          <h3 className="text-lg font-semibold mb-1">No discussions yet</h3>
-          <p className="text-muted-foreground mb-4">Start the conversation by creating the first discussion!</p>
-          <Button asChild>
+          <div className="p-3 rounded-2xl bg-muted/50 mb-3">
+            <MessageSquare className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-base font-bold mb-1">No discussions yet</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-sm">Start the conversation by creating the first discussion!</p>
+          <Button asChild className="shadow-lg shadow-primary/20">
             <Link to={resolvedClassId ? `/classes/${resolvedClassId}/discussions/new` : '/discussions/new'}>
               <Plus className="h-4 w-4 mr-2" />
               Create Discussion
@@ -129,91 +166,125 @@ export function DiscussionsList({ classId, filterType = 'all', sortBy = 'lastAct
   }
 
   return (
-    <div className="space-y-4">
-      {sortedDiscussions.map((discussion: Discussion) => (
-        <Card 
-          key={discussion.id}
-          className={`group hover:shadow-md transition-shadow ${discussion.isPinned ? 'border-primary/50 bg-primary/5 dark:bg-primary/10' : ''}`}
-        >
-          <CardContent className="p-4">
-            <div className="flex items-start gap-4">
-              {/* Vote Count */}
-              <div className="flex flex-col items-center gap-1 min-w-[3rem]">
-                <div className="text-xs font-semibold text-muted-foreground">
-                  {discussion.replyCount}
-                </div>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+    <div className="bg-card rounded-xl border border-primary/35 shadow-sm overflow-hidden divide-y divide-primary/20">
+      {sortedDiscussions.map((discussion: Discussion) => {
+        return (
+          <div
+            key={discussion.id}
+            className={`group hover:bg-primary/[0.02] transition-all duration-200 relative border-l-2 border-l-transparent hover:border-l-primary/60 ${
+              discussion.isPinned ? 'bg-primary/[0.03] border-l-primary/40' : ''
+            }`}
+          >
+            <Link
+              to={resolvedClassId
+                ? `/classes/${resolvedClassId}/discussions/${discussion.id}`
+                : `/discussions/${discussion.id}`
+              }
+              className="flex items-center gap-6 p-4 md:px-6 md:py-5"
+            >
+              {/* Profile Picture */}
+              <div className="relative shrink-0">
+                <Avatar className="h-12 w-12 ring-2 ring-background shadow-sm">
+                  <AvatarImage src={discussion.author?.image || undefined} />
+                  <AvatarFallback className="text-sm font-bold bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                    {discussion.author?.name?.charAt(0).toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                {discussion.author?.role === 'teacher' && (
+                  <div className="absolute -bottom-1 -right-1 h-5 w-5 bg-primary rounded-full border-2 border-background flex items-center justify-center shadow-sm" title="Teacher">
+                    <Pin className="h-2.5 w-2.5 text-primary-foreground fill-current" />
+                  </div>
+                )}
               </div>
 
               {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  {discussion.isPinned && (
-                    <Pin className="h-3.5 w-3.5 text-primary fill-primary" />
-                  )}
-                  {discussion.isLocked && (
-                    <Lock className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
-                  <Badge variant="secondary" className={`text-[10px] ${typeColors[discussion.type]}`}>
-                    {typeLabels[discussion.type]}
-                  </Badge>
-                  {discussion.replyCount > 0 && (
-                    <Badge variant="outline" className="text-[10px]">
-                      {discussion.replyCount} {discussion.replyCount === 1 ? 'reply' : 'replies'}
-                    </Badge>
-                  )}
-                  {/* Show class name in global view */}
+              <div className="flex-1 min-w-0 flex flex-col gap-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Type Badge */}
+                  {(() => {
+                    const config = typeConfigs[discussion.type] || typeConfigs.general;
+                    const Icon = config.icon;
+                    return (
+                      <span className={cn(
+                        "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border transition-all",
+                        config.className
+                      )}>
+                        <Icon className="h-3 w-3" />
+                        {config.label}
+                      </span>
+                    );
+                  })()}
+                  
+                  {/* Class Badge */}
                   {!resolvedClassId && discussion.class && (
-                    <Badge variant="outline" className="text-[10px]">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-secondary text-secondary-foreground border border-border/50">
                       {discussion.class.name}
-                    </Badge>
+                    </span>
+                  )}
+
+                  {/* Pinned Indicator */}
+                  {discussion.isPinned && (
+                    <span className="inline-flex items-center gap-1 text-primary text-[10px] font-bold uppercase tracking-wider">
+                      <Pin className="h-3 w-3 fill-primary" />
+                      Pinned
+                    </span>
                   )}
                 </div>
 
-                <Link 
-                  to={resolvedClassId 
-                    ? `/classes/${resolvedClassId}/discussions/${discussion.id}`
-                    : `/discussions/${discussion.id}`
-                  }
-                  className="group-hover:text-primary transition-colors"
-                >
-                  <h3 className="text-base font-semibold leading-tight mb-1 line-clamp-2">
-                    {discussion.title}
-                  </h3>
-                </Link>
+                {/* Title */}
+                <h3 className="text-[17px] font-semibold leading-tight tracking-tight group-hover:text-primary transition-colors truncate">
+                  {discussion.title}
+                </h3>
 
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-2">
-                  {discussion.content.replace(/[#*_`~]/g, '').substring(0, 150)}
-                  {discussion.content.length > 150 ? '...' : ''}
-                </p>
-
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Avatar className="h-5 w-5">
-                      <AvatarImage src={discussion.author?.image || undefined} />
-                      <AvatarFallback className="text-[10px]">
-                        {discussion.author?.name?.charAt(0) || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{discussion.author?.name || 'Unknown'}</span>
-                    {discussion.author?.role === 'teacher' && (
-                      <Badge variant="secondary" className="text-[9px] h-4 px-1">Teacher</Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Eye className="h-3 w-3" />
-                    <span>{discussion.viewCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
+                {/* By Line */}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground/80">
+                  <span className="font-medium hover:text-foreground transition-colors">
+                    {discussion.author?.name || 'Unknown User'}
+                  </span>
+                  <span className="h-1 w-1 rounded-full bg-border" />
+                  <span className="flex items-center gap-1">
                     <Clock className="h-3 w-3" />
-                    <span>{formatDistanceToNow(new Date(discussion.lastActivityAt || discussion.createdAt), { addSuffix: true })}</span>
-                  </div>
+                    {formatTimestamp(discussion.lastActivityAt || discussion.createdAt)}
+                  </span>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+
+              {/* Meta Stats - Desktop only row */}
+              <div className="hidden md:flex items-center gap-8 text-sm font-medium">
+                <div className="flex flex-col items-center min-w-[60px]">
+                  <span className="text-foreground font-bold text-lg leading-none">
+                    {discussion.replyCount}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
+                    Replies
+                  </span>
+                </div>
+
+                <div className="flex flex-col items-center min-w-[60px]">
+                  <span className="text-foreground/70 font-semibold text-lg leading-none">
+                    {discussion.viewCount}
+                  </span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground mt-1">
+                    Views
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Stats - Icon only */}
+              <div className="flex md:hidden flex-col gap-2 items-end shrink-0">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 text-xs font-bold">
+                  <MessageSquare className="h-3 w-3" />
+                  {discussion.replyCount}
+                </div>
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 text-xs font-medium text-muted-foreground">
+                  <Eye className="h-3 w-3" />
+                  {discussion.viewCount}
+                </div>
+              </div>
+            </Link>
+          </div>
+        );
+      })}
     </div>
   );
 }

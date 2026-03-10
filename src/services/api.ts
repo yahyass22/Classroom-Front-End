@@ -47,7 +47,8 @@ export const apiClient = {
   async post<T>(endpoint: string, data?: any): Promise<T> {
     const url = `${API_BASE}${endpoint}`;
     console.log('🌐 API POST:', url, data);
-    
+    console.log('🍪 Current cookies before POST:', document.cookie?.substring(0, 100));
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -56,6 +57,9 @@ export const apiClient = {
       credentials: "include",
       body: JSON.stringify(data),
     });
+
+    console.log('📡 POST Response Status:', response.status);
+    console.log('🍪 Set-Cookie header present:', response.headers.has('Set-Cookie'));
 
     const isNoContent = response.status === 204 || response.status === 205;
     let responseData: any = null;

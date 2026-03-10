@@ -8,8 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   MessageSquare,
   Eye,
@@ -22,10 +20,14 @@ import {
   Reply,
   Edit2,
   Trash2,
-  CornerDownRight,
   Shield,
+  Info,
+  Megaphone,
+  HelpCircle,
+  FileText,
+  MessageCircle,
 } from "lucide-react";
-import { Link, useParams, useNavigate } from "react-router";
+import { useParams, useNavigate } from "react-router";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -86,18 +88,27 @@ interface DiscussionReply {
   userVote: 'up' | 'down' | null;
 }
 
-const typeColors: Record<string, string> = {
-  general: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
-  question: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-  announcement: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  resource: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-};
-
-const typeLabels: Record<string, string> = {
-  general: 'General',
-  question: 'Question',
-  announcement: 'Announcement',
-  resource: 'Resource',
+const typeConfigs: Record<string, { label: string; icon: any; className: string }> = {
+  general: {
+    label: 'General',
+    icon: MessageCircle,
+    className: 'bg-muted/50 text-muted-foreground border-muted-foreground/20'
+  },
+  question: {
+    label: 'Question',
+    icon: HelpCircle,
+    className: 'bg-primary/10 text-primary border-primary/20'
+  },
+  announcement: {
+    label: 'Announcement',
+    icon: Megaphone,
+    className: 'bg-primary text-primary-foreground border-primary shadow-sm'
+  },
+  resource: {
+    label: 'Resource',
+    icon: FileText,
+    className: 'bg-muted/80 text-foreground border-border'
+  },
 };
 
 interface DiscussionDetailProps {
@@ -108,7 +119,6 @@ interface DiscussionDetailProps {
 export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProps) {
   const params = useParams();
   const resolvedClassId = classId || params.id as string;
-  const navigate = useNavigate();
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const [replyContent, setReplyContent] = useState('');
@@ -182,7 +192,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
-      toast.success('Answer marked as accepted');
+      toast.success('Answer status updated');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Action failed');
@@ -205,29 +215,29 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
 
   const pinMutation = useMutation({
     mutationFn: async () => {
-      if (!resolvedClassId) throw new Error("Class ID is required to pin a discussion");
+      if (!resolvedClassId) throw new Error("Class ID is required");
       await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/pin`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
-      toast.success('Discussion pinned');
+      toast.success('Discussion pin toggled');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to pin discussion');
+      toast.error(error.message || 'Failed to update pin');
     }
   });
 
   const lockMutation = useMutation({
     mutationFn: async () => {
-      if (!resolvedClassId) throw new Error("Class ID is required to lock a discussion");
+      if (!resolvedClassId) throw new Error("Class ID is required");
       await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/lock`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
-      toast.success('Discussion locked');
+      toast.success('Discussion lock toggled');
     },
     onError: (error: any) => {
-      toast.error(error.message || 'Failed to lock discussion');
+      toast.error(error.message || 'Failed to update lock');
     }
   });
 
@@ -244,396 +254,362 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const isGlobalDiscussion = !resolvedClassId || params.id === undefined && !classId;
 
   if (isLoading) {
-    return (
-      <div className="space-y-4 animate-pulse">
-        <Card>
-          <CardHeader>
-            <div className="h-6 bg-muted rounded w-3/4" />
-          </CardHeader>
-          <CardContent>
-            <div className="h-4 bg-muted rounded w-full mb-2" />
-            <div className="h-4 bg-muted rounded w-2/3" />
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <div className="max-w-[1200px] mx-auto px-4 py-8 animate-pulse space-y-8">
+      <div className="h-12 bg-muted rounded-xl w-3/4" />
+      <div className="h-64 bg-muted rounded-3xl w-full" />
+    </div>;
   }
 
   if (isError) {
     return (
-      <Alert variant="destructive">
-        <Shield className="h-4 w-4" />
-        <AlertDescription className="flex items-center justify-between w-full">
-          <span>{error instanceof Error ? error.message : 'An error occurred while fetching the discussion'}</span>
-          <Button variant="outline" size="sm" onClick={() => refetch()} className="ml-4">
-            Retry
-          </Button>
-        </AlertDescription>
-      </Alert>
+      <div className="max-w-[1200px] mx-auto px-4 py-8">
+        <Alert variant="destructive">
+          <Shield className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between w-full">
+            <span>{error instanceof Error ? error.message : 'An error occurred'}</span>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>Retry</Button>
+          </AlertDescription>
+        </Alert>
+      </div>
     );
   }
 
-  if (!discussion) {
-    return (
-      <Alert>
-        <AlertDescription>Discussion not found</AlertDescription>
-      </Alert>
-    );
-  }
+  if (!discussion) return null;
 
   const rootReplies = discussion.replies?.filter((r: DiscussionReply) => !r.parentId) || [];
   const getRepliesToReply = (parentId: number) => 
     discussion.replies?.filter((r: DiscussionReply) => r.parentId === parentId) || [];
 
   return (
-    <div className="space-y-6">
-      {/* Main Discussion */}
-      <Card>
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-2 flex-wrap">
-                {discussion.isPinned && (
-                  <Badge variant="secondary" className="bg-primary/10 text-primary">
-                    <Pin className="h-3 w-3 mr-1" />
-                    Pinned
-                  </Badge>
+    <div className="max-w-[1200px] mx-auto px-4 py-8">
+      {/* Discussion Header: Large Title */}
+      <header className="mb-10 border-b border-primary/30 pb-8">
+        <div className="flex items-center gap-3 mb-4">
+          {(() => {
+            const config = typeConfigs[discussion.type] || typeConfigs.general;
+            const Icon = config.icon;
+            return (
+              <span className={cn(
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider border transition-all",
+                config.className
+              )}>
+                <Icon className="h-3 w-3" />
+                {config.label}
+              </span>
+            );
+          })()}
+          {discussion.isPinned && (
+            <Badge variant="secondary" className="px-3 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary border-none">
+              <Pin className="h-3 w-3 mr-1.5 fill-current" />
+              Pinned
+            </Badge>
+          )}
+        </div>
+        <h1 className="text-4xl md:text-5xl font-black tracking-tight leading-[1.1] text-foreground mb-4">
+          {discussion.title}
+        </h1>
+      </header>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        {/* Left Column: Post Stream */}
+        <div className="lg:col-span-8 space-y-0">
+          {/* Main Post (The Original Discussion) */}
+          <article className="group relative flex gap-6 pb-12 border-b border-primary/30">
+            {/* Left: Avatar */}
+            <div className="shrink-0 pt-1">
+              <Avatar className="h-14 w-14 ring-4 ring-background shadow-sm border border-primary/20">
+                <AvatarImage src={discussion.author?.image || undefined} />
+                <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-primary/20 to-primary/5 text-primary">
+                  {discussion.author?.name?.charAt(0).toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+
+            {/* Right: Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="font-black text-foreground text-lg hover:underline cursor-pointer">
+                  {discussion.author?.name || 'Unknown'}
+                </span>
+                {discussion.author?.role === 'teacher' && (
+                  <Badge className="bg-primary text-[10px] font-black uppercase tracking-widest h-5 px-2">Staff</Badge>
                 )}
-                {discussion.isLocked && (
-                  <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    <Lock className="h-3 w-3 mr-1" />
-                    Locked
-                  </Badge>
-                )}
-                <Badge variant="secondary" className={typeColors[discussion.type]}>
-                  {typeLabels[discussion.type]}
-                </Badge>
+                <span className="text-sm text-muted-foreground font-medium">
+                  {formatDistanceToNow(new Date(discussion.createdAt), { addSuffix: true })}
+                </span>
               </div>
-              <h1 className="text-2xl font-bold mb-2">{discussion.title}</h1>
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <Avatar className="h-6 w-6">
-                    <AvatarImage src={discussion.author?.image || undefined} />
-                    <AvatarFallback className="text-xs">
-                      {discussion.author?.name?.charAt(0) || 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium">{discussion.author?.name || 'Unknown'}</span>
-                  {discussion.author?.role === 'teacher' && (
-                    <Badge variant="secondary" className="text-[9px] h-4 px-1">Teacher</Badge>
+              
+              <div className="prose prose-lg dark:prose-invert max-w-none prose-p:leading-relaxed prose-pre:bg-muted/50 prose-pre:border-primary/20">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  {discussion.content}
+                </ReactMarkdown>
+              </div>
+            </div>
+          </article>
+
+          {/* New Reply Area (Moved Before Replies) */}
+          {!discussion.isLocked ? (
+            <div className="mt-8 mb-16">
+              <div className="bg-card border border-primary/40 rounded-3xl p-8 shadow-xl shadow-primary/5">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                    <div className="h-8 w-1.5 bg-primary rounded-full" />
+                    {replyingTo ? 'Replying to Thread' : 'Your Contribution'}
+                  </h3>
+                  {replyingTo && (
+                    <Button variant="ghost" size="sm" className="font-bold h-8" onClick={() => setReplyingTo(null)}>Cancel Reply</Button>
                   )}
                 </div>
-                <div className="flex items-center gap-1">
-                  <Eye className="h-4 w-4" />
-                  <span>{discussion.viewCount} views</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Clock className="h-4 w-4" />
-                  <span>{formatDistanceToNow(new Date(discussion.createdAt), { addSuffix: true })}</span>
+                <Textarea
+                  value={replyContent}
+                  onChange={(e) => setReplyContent(e.target.value)}
+                  placeholder="What are your thoughts? Use Markdown for formatting..."
+                  className="min-h-[180px] text-lg bg-muted/10 border-none focus-visible:ring-2 focus-visible:ring-primary mb-6 p-6 resize-y"
+                />
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-2 text-muted-foreground font-medium text-sm bg-muted/30 px-4 py-2 rounded-full">
+                    <Info className="h-4 w-4 text-primary" />
+                    Markdown, equations, and code are supported
+                  </div>
+                  <Button 
+                    onClick={handleReply} 
+                    disabled={!replyContent.trim() || createReplyMutation.isPending}
+                    className="px-12 h-14 rounded-2xl font-black text-lg shadow-2xl shadow-primary/20 hover:scale-[1.02] transition-transform"
+                  >
+                    {createReplyMutation.isPending ? 'Posting...' : 'Post Your Reply'}
+                  </Button>
                 </div>
               </div>
             </div>
-            {isTeacher && !isGlobalDiscussion && (
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => pinMutation.mutate()}
-                  className={discussion.isPinned ? 'bg-primary/10' : ''}
-                  disabled={pinMutation.isPending}
-                  aria-label={discussion.isPinned ? "Unpin discussion" : "Pin discussion"}
-                  title={discussion.isPinned ? "Unpin discussion" : "Pin discussion"}
-                >
-                  <Pin className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => lockMutation.mutate()}
-                  className={discussion.isLocked ? 'bg-amber-100' : ''}
-                  disabled={lockMutation.isPending}
-                  aria-label={discussion.isLocked ? "Unlock discussion" : "Lock discussion"}
-                  title={discussion.isLocked ? "Unlock discussion" : "Lock discussion"}
-                >
-                  <Lock className="h-4 w-4" />
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="prose dark:prose-invert max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-              {discussion.content}
-            </ReactMarkdown>
-          </div>
-        </CardContent>
-      </Card>
+          ) : (
+            <div className="mt-8 mb-16 p-12 bg-amber-500/5 border-2 border-amber-500/20 rounded-3xl text-center">
+              <Lock className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+              <h3 className="text-2xl font-black text-amber-600">This topic is now closed</h3>
+              <p className="text-amber-700/70 text-lg mt-2">New replies are no longer being accepted for this discussion.</p>
+            </div>
+          )}
 
-      {/* Replies */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            {discussion.replyCount} {discussion.replyCount === 1 ? 'Reply' : 'Replies'}
-          </h2>
-        </div>
+          {/* Conversation Stream */}
+          <div className="space-y-0">
+            <h2 className="text-sm font-black uppercase tracking-[0.2em] text-muted-foreground mb-10 flex items-center gap-4">
+              <span className="shrink-0">Replies</span>
+              <div className="h-px w-full bg-primary/20" />
+            </h2>
 
-        {rootReplies.map((reply: DiscussionReply) => (
-          <div key={reply.id} className="space-y-4">
-            <Card className={reply.isAccepted ? 'border-emerald-500/50 bg-emerald-50/50 dark:bg-emerald-900/10' : ''}>
-              <CardContent className="p-4">
-                <div className="flex items-start gap-4">
-                  {/* Vote Buttons */}
-                  <div className="flex flex-col items-center gap-1 min-w-[2.5rem]">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "h-8 w-8 p-0",
-                        reply.userVote === 'up' && "text-primary bg-primary/10"
-                      )}
-                      onClick={() => handleVote(reply.id, reply.userVote, 'up')}
-                      aria-label={reply.userVote === 'up' ? "Remove upvote" : "Upvote reply"}
-                      title={reply.userVote === 'up' ? "Remove upvote" : "Upvote reply"}
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <span className={cn(
-                      "text-sm font-semibold",
-                      reply.userVote === 'up' && "text-primary",
-                      reply.userVote === 'down' && "text-destructive"
-                    )}>
-                      {reply.voteCount}
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "h-8 w-8 p-0",
-                        reply.userVote === 'down' && "text-destructive bg-destructive/10"
-                      )}
-                      onClick={() => handleVote(reply.id, reply.userVote, 'down')}
-                      aria-label={reply.userVote === 'down' ? "Remove downvote" : "Downvote reply"}
-                      title={reply.userVote === 'down' ? "Remove downvote" : "Downvote reply"}
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                  </div>
+            <div className="space-y-0 divide-y divide-primary/20 border-t border-primary/20">
+              {rootReplies.map((reply: DiscussionReply) => (
+                <div key={reply.id} className={cn(
+                  "py-10 transition-colors group",
+                  reply.isAccepted && "bg-emerald-500/[0.02]"
+                )}>
+                  <div className="flex gap-6 relative">
+                    {/* Visual Threading Indicator for Accepted Answers */}
+                    {reply.isAccepted && (
+                      <div className="absolute -left-4 top-0 bottom-0 w-1 bg-emerald-500 rounded-full" />
+                    )}
 
-                  {/* Content */}
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={reply.author?.image || undefined} />
-                          <AvatarFallback className="text-xs">
-                            {reply.author?.name?.charAt(0) || 'U'}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">{reply.author?.name || 'Unknown'}</span>
-                        {reply.author?.role === 'teacher' && (
-                          <Badge variant="secondary" className="text-[9px] h-4 px-1">Teacher</Badge>
-                        )}
-                        <span className="text-xs text-muted-foreground">
-                          {formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}
+                    {/* Left: Avatar & Votes */}
+                    <div className="flex flex-col items-center gap-4 shrink-0">
+                      <Avatar className="h-12 w-12 ring-2 ring-background border border-primary/10">
+                        <AvatarImage src={reply.author?.image || undefined} />
+                        <AvatarFallback className="text-lg font-bold bg-muted text-muted-foreground">
+                          {reply.author?.name?.charAt(0).toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      
+                      {/* Compact Votes */}
+                      <div className="flex flex-col items-center gap-1 bg-muted/30 rounded-full py-2 px-1 border border-primary/10">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn("h-8 w-8 rounded-full", reply.userVote === 'up' ? "text-primary" : "text-muted-foreground hover:text-primary")}
+                          onClick={() => handleVote(reply.id, reply.userVote, 'up')}
+                        >
+                          <ArrowUp className={cn("h-5 w-5", reply.userVote === 'up' && "fill-current")} />
+                        </Button>
+                        <span className={cn("text-sm font-black tabular-nums", reply.userVote === 'up' ? "text-primary" : "text-foreground")}>
+                          {reply.voteCount}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {reply.isAccepted && (
-                          <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            Accepted
-                          </Badge>
-                        )}
-                        {isTeacher && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => acceptAnswerMutation.mutate(reply.id)}
-                            className="h-7 text-xs"
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5 mr-1" />
-                            {reply.isAccepted ? 'Unmark' : 'Accept'}
-                          </Button>
-                        )}
-                        {reply.authorId === session?.user?.id && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setEditingId(reply.id);
-                                setEditContent(reply.content);
-                              }}
-                              className="h-7 text-xs"
-                              aria-label="Edit reply"
-                              title="Edit reply"
-                            >
-                              <Edit2 className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowDeleteDialog(reply.id)}
-                              className="h-7 text-xs text-destructive"
-                              aria-label="Delete reply"
-                              title="Delete reply"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
-                        {!discussion.isLocked && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setReplyingTo(reply.id)}
-                            className="h-7 text-xs"
-                          >
-                            <Reply className="h-3.5 w-3.5 mr-1" />
-                            Reply
-                          </Button>
-                        )}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn("h-8 w-8 rounded-full", reply.userVote === 'down' ? "text-destructive" : "text-muted-foreground hover:text-destructive")}
+                          onClick={() => handleVote(reply.id, reply.userVote, 'down')}
+                        >
+                          <ArrowDown className={cn("h-5 w-5", reply.userVote === 'down' && "fill-current")} />
+                        </Button>
                       </div>
                     </div>
 
-                    {editingId === reply.id ? (
-                      <div className="space-y-2">
-                        <Textarea
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          className="min-h-[100px]"
-                        />
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => setEditingId(null)}
-                            disabled={updateReplyMutation.isPending}
-                          >
-                            Cancel
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            onClick={() => updateReplyMutation.mutate({ replyId: reply.id, content: editContent })}
-                            disabled={updateReplyMutation.isPending || !editContent.trim()}
-                          >
-                            {updateReplyMutation.isPending ? 'Saving...' : 'Save'}
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="prose dark:prose-invert max-w-none text-sm">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {reply.content}
-                        </ReactMarkdown>
-                      </div>
-                    )}
-
-                    {/* Nested replies */}
-                    {getRepliesToReply(reply.id).map((nestedReply: DiscussionReply) => (
-                      <div key={nestedReply.id} className="mt-4 ml-6 pl-4 border-l-2 border-muted">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CornerDownRight className="h-4 w-4 text-muted-foreground" />
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src={nestedReply.author?.image || undefined} />
-                            <AvatarFallback className="text-xs">
-                              {nestedReply.author?.name?.charAt(0) || 'U'}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm font-medium">{nestedReply.author?.name || 'Unknown'}</span>
-                          {nestedReply.author?.role === 'teacher' && (
-                            <Badge variant="secondary" className="text-[9px] h-4 px-1">Teacher</Badge>
+                    {/* Right: Content */}
+                    <div className="flex-1 min-w-0 space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-foreground">{reply.author?.name || 'Unknown'}</span>
+                          {reply.author?.role === 'teacher' && <Badge variant="outline" className="text-[9px] font-black tracking-tighter border-primary/40 text-primary px-1 uppercase">Staff</Badge>}
+                          <span className="text-xs text-muted-foreground font-bold uppercase tracking-widest">{formatDistanceToNow(new Date(reply.createdAt), { addSuffix: true })}</span>
+                          {reply.isAccepted && (
+                            <Badge className="bg-emerald-500 text-[9px] font-black tracking-widest uppercase py-0.5">Solution</Badge>
                           )}
-                          <span className="text-xs text-muted-foreground">
-                            {formatDistanceToNow(new Date(nestedReply.createdAt), { addSuffix: true })}
-                          </span>
                         </div>
-                        <div className="prose dark:prose-invert max-w-none text-sm">
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {isTeacher && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => acceptAnswerMutation.mutate(reply.id)}
+                              className={cn("h-7 px-2 text-[10px] font-black uppercase tracking-widest", reply.isAccepted ? "text-emerald-600" : "text-muted-foreground hover:text-emerald-600")}
+                            >
+                              {reply.isAccepted ? 'Unmark Solution' : 'Mark Solution'}
+                            </Button>
+                          )}
+                          {reply.authorId === session?.user?.id && (
+                            <Button variant="ghost" size="icon" onClick={() => { setEditingId(reply.id); setEditContent(reply.content); }} className="h-7 w-7 text-muted-foreground hover:text-primary">
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+
+                      {editingId === reply.id ? (
+                        <div className="space-y-4 bg-muted/20 p-6 rounded-2xl border border-primary/30 shadow-inner">
+                          <Textarea value={editContent} onChange={(e) => setEditContent(e.target.value)} className="min-h-[120px] bg-background text-base border-none focus-visible:ring-primary shadow-sm" />
+                          <div className="flex justify-end gap-3">
+                            <Button size="sm" variant="ghost" onClick={() => setEditingId(null)} className="font-bold">Cancel</Button>
+                            <Button size="sm" className="px-6 font-bold" onClick={() => updateReplyMutation.mutate({ replyId: reply.id, content: editContent })} disabled={updateReplyMutation.isPending || !editContent.trim()}>Save Changes</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/90 leading-[1.7]">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                            {nestedReply.content}
+                            {reply.content}
                           </ReactMarkdown>
                         </div>
+                      )}
+
+                      <div className="flex items-center gap-4 pt-2">
+                        {!discussion.isLocked && (
+                          <Button variant="ghost" size="sm" onClick={() => setReplyingTo(reply.id)} className="h-8 px-3 rounded-md text-xs font-black uppercase tracking-widest text-primary hover:bg-primary/5">
+                            <Reply className="h-3.5 w-3.5 mr-2" />
+                            Reply
+                          </Button>
+                        )}
+                        {reply.authorId === session?.user?.id && (
+                          <Button variant="ghost" size="sm" onClick={() => setShowDeleteDialog(reply.id)} className="h-8 px-3 rounded-md text-xs font-black uppercase tracking-widest text-destructive hover:bg-destructive/5">
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />
+                            Delete
+                          </Button>
+                        )}
                       </div>
-                    ))}
+
+                      {/* Threaded Nested Replies */}
+                      {getRepliesToReply(reply.id).map((nested: DiscussionReply) => (
+                        <div key={nested.id} className="mt-8 relative pl-10 border-l-2 border-primary/10 ml-6">
+                          <div className="flex items-center gap-3 mb-3">
+                            <Avatar className="h-8 w-8 ring-2 ring-background border border-primary/10">
+                              <AvatarImage src={nested.author?.image || undefined} />
+                              <AvatarFallback className="text-[10px] font-bold">{nested.author?.name?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-bold text-xs">{nested.author?.name || 'Unknown'}</span>
+                            <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">{formatDistanceToNow(new Date(nested.createdAt), { addSuffix: true })}</span>
+                          </div>
+                          <div className="prose prose-sm dark:prose-invert max-w-none text-foreground/80 leading-relaxed bg-muted/20 p-4 rounded-xl border border-primary/10">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{nested.content}</ReactMarkdown>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        ))}
+              ))}
+            </div>
 
-        {rootReplies.length === 0 && (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-              <MessageSquare className="h-12 w-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-1">No replies yet</h3>
-              <p className="text-muted-foreground">Be the first to reply!</p>
+            {/* Empty State */}
+            {rootReplies.length === 0 && (
+              <div className="py-20 text-center bg-muted/10 rounded-3xl border-2 border-dashed border-primary/20">
+                <MessageSquare className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+                <h3 className="text-xl font-bold">No replies yet</h3>
+                <p className="text-muted-foreground">Start the discussion by sharing your thoughts below.</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Statistics & Info */}
+        <div className="lg:col-span-4 space-y-8 lg:sticky lg:top-8">
+          <Card className="border-primary/40 bg-card overflow-hidden rounded-3xl shadow-lg">
+            <CardHeader className="bg-primary/[0.03] border-b border-primary/20 py-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary">Topic Statistics</h3>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="grid grid-cols-2 divide-x divide-primary/20 border-b border-primary/20">
+                <div className="p-6 text-center">
+                  <span className="block text-3xl font-black tabular-nums">{discussion.replyCount}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1 block">Replies</span>
+                </div>
+                <div className="p-6 text-center">
+                  <span className="block text-3xl font-black tabular-nums text-foreground/70">{discussion.viewCount}</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mt-1 block">Views</span>
+                </div>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-bold text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4" /> Created</span>
+                  <span className="font-black text-foreground">{new Date(discussion.createdAt).toLocaleDateString()}</span>
+                </div>
+                {discussion.lastActivityAt && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-bold text-muted-foreground flex items-center gap-2"><MessageSquare className="h-4 w-4" /> Last Activity</span>
+                    <span className="font-black text-primary">{formatDistanceToNow(new Date(discussion.lastActivityAt), { addSuffix: true })}</span>
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
-        )}
+
+          {isTeacher && !isGlobalDiscussion && (
+            <div className="space-y-4">
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary px-4">Administrative</h3>
+              <div className="grid grid-cols-1 gap-3">
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-14 justify-start px-6 rounded-2xl font-black transition-all border-primary/30",
+                    discussion.isPinned ? "bg-primary text-primary-foreground" : "hover:bg-primary/5 hover:border-primary"
+                  )}
+                  onClick={() => pinMutation.mutate()}
+                >
+                  <Pin className={cn("h-5 w-5 mr-4", discussion.isPinned && "fill-current")} />
+                  {discussion.isPinned ? 'Unpin Topic' : 'Pin Topic'}
+                </Button>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-14 justify-start px-6 rounded-2xl font-black transition-all border-amber-500/30",
+                    discussion.isLocked ? "bg-amber-500 text-white" : "hover:bg-amber-500/5 hover:border-amber-500"
+                  )}
+                  onClick={() => lockMutation.mutate()}
+                >
+                  <Lock className={cn("h-5 w-5 mr-4", discussion.isLocked && "fill-current")} />
+                  {discussion.isLocked ? 'Unlock Topic' : 'Close Topic'}
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Reply Form */}
-      {!discussion.isLocked && (
-        <Card>
-          <CardHeader>
-            <h3 className="font-semibold">Your Reply</h3>
-          </CardHeader>
-          <CardContent>
-            {replyingTo && (
-              <Alert className="mb-4">
-                <AlertDescription className="text-sm">
-                  Replying to a comment. <Button variant="link" size="sm" className="h-auto p-0" onClick={() => setReplyingTo(null)}>Cancel</Button>
-                </AlertDescription>
-              </Alert>
-            )}
-            <Textarea
-              value={replyContent}
-              onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="Write your reply... (Markdown supported)"
-              className="min-h-[120px] mb-4"
-            />
-            <div className="flex justify-end">
-              <Button 
-                onClick={handleReply} 
-                disabled={!replyContent.trim() || createReplyMutation.isPending}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Post Reply
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {discussion.isLocked && (
-        <Alert>
-          <Lock className="h-4 w-4" />
-          <AlertDescription>
-            This discussion is locked. No new replies can be added.
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Delete Confirmation Dialog */}
       <Dialog open={showDeleteDialog !== null} onOpenChange={() => setShowDeleteDialog(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Reply</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this reply? This action cannot be undone.
-            </DialogDescription>
+            <DialogDescription>Are you sure? This action cannot be undone.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowDeleteDialog(null)}>Cancel</Button>
-            <Button 
-              variant="destructive" 
-              onClick={() => showDeleteDialog && deleteReplyMutation.mutate(showDeleteDialog)}
-            >
-              Delete
-            </Button>
+            <Button variant="destructive" onClick={() => showDeleteDialog && deleteReplyMutation.mutate(showDeleteDialog)}>Delete</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

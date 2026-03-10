@@ -15,7 +15,7 @@ import { dataProvider } from "./providers/data";
 import { authProvider } from "./providers/auth";
 import AuthPage from "@/pages/auth.tsx";
 import Dashboard from "@/pages/dashboard.tsx";
-import {BookOpen, GraduationCap, Home, MessageSquare} from "lucide-react";
+import {BookOpen, Clock, GraduationCap, Home, MessageSquare} from "lucide-react";
 import {Layout} from "@/components/refine-ui/layout/layout.tsx";
 import SubjectsList from "@/pages/subjects/list.tsx";
 import SubjectsCreate from "@/pages/subjects/create.tsx";
@@ -25,6 +25,7 @@ import ClassesShow from "@/pages/classes/show.tsx";
 import DiscussionsListPage from "@/pages/discussions/list.tsx";
 import DiscussionsShowPage from "@/pages/discussions/show.tsx";
 import DiscussionsNewPage from "@/pages/discussions/new.tsx";
+import SchedulePage from "@/pages/schedule.tsx";
 
 // Custom Logo Component
 function Logo() {
@@ -71,6 +72,11 @@ function App() {
                       meta : {label: 'Dashboard' , icon: <Home/>}
                   },
                   {
+                      name: 'schedule',
+                      list: '/schedule',
+                      meta: { label: 'Schedule', icon: <Clock /> }
+                  },
+                  {
                       name: 'discussions',
                       list: '/discussions',
                       create: '/discussions/new',
@@ -102,6 +108,7 @@ function App() {
                       </Authenticated>
                   }>
                       <Route path = "/" element={<Dashboard/>} />
+                      <Route path = "/schedule" element={<SchedulePage/>} />
                       <Route path = "discussions">
                           <Route index element ={<DiscussionsListPage />} />
                           <Route path = "new" element ={<DiscussionsNewPage/>} />

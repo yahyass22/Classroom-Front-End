@@ -90,11 +90,17 @@ export interface StudentDepartmentDistribution {
 }
 
 export interface ScheduleHeatmapData {
+  classId: number;
+  className: string;
+  subjectName: string;
+  subjectCode: string;
+  departmentCode: string | null;
+  departmentName: string | null;
+  teacherName: string;
+  teacherImage: string | null;
   day: string;
-  hour: number;
-  count: number;
-  subjects?: string[];
-  classes?: string[];
+  startTime: string;
+  endTime: string;
 }
 
 export interface TopTeacher {

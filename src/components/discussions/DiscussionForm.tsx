@@ -103,6 +103,9 @@ export function DiscussionForm() {
         type
       });
 
+      // Debug: Check if we have credentials
+      console.log('🍪 Checking cookies:', document.cookie);
+
       if (!targetClassId) {
         throw new Error('Please select a class');
       }
@@ -331,7 +334,7 @@ export function DiscussionForm() {
           )}
 
           {/* Discussion Type Card */}
-          <Card>
+          <Card className="border-primary/35">
             <CardHeader className="pb-3">
               <Label className="text-base font-semibold">Discussion Type</Label>
               <p className="text-xs text-muted-foreground">
@@ -491,7 +494,7 @@ export function DiscussionForm() {
       </form>
 
       {/* Guidelines Card */}
-      <Card className="bg-muted/30 border-dashed">
+      <Card className="bg-muted/30 border-dashed border-2 border-primary/35">
         <CardContent className="py-6">
           <h3 className="font-semibold mb-3 text-sm">Discussion Guidelines</h3>
           <ul className="text-sm text-muted-foreground space-y-1.5">
