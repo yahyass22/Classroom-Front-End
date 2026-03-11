@@ -43,7 +43,8 @@ const flattenFilters = (filters: any[]): any[] => {
  * Invalidates relevant queries after a mutation
  * This ensures fresh data is fetched after create/update/delete operations
  */
-const invalidateQueries = (resource: string, action: 'create' | 'update' | 'delete', id?: string | number) => {
+const invalidateQueries = (resource: string, action: 'create' | 'update' | 'deleteOne', id?: string | number) => {
+    const normalizedId = id !== undefined && id !== null ? String(id) : undefined;
     // Always invalidate dashboard when data changes
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
 
@@ -51,15 +52,15 @@ const invalidateQueries = (resource: string, action: 'create' | 'update' | 'dele
     queryClient.invalidateQueries({ queryKey: [resource] });
 
     // Invalidate specific item if ID is provided
-    if (id) {
-        queryClient.invalidateQueries({ queryKey: [resource, id] });
+    if (normalizedId) {
+        queryClient.invalidateQueries({ queryKey: [resource, normalizedId] });
     }
 
     // Cross-resource invalidation rules
     if (resource === 'classes') {
         // When classes change, also invalidate discussions for that class
-        if (id) {
-            queryClient.invalidateQueries({ queryKey: ["discussions", "class", id] });
+        if (normalizedId) {
+            queryClient.invalidateQueries({ queryKey: ["discussions", "class", normalizedId] });
         }
         queryClient.invalidateQueries({ queryKey: ["discussions"] });
     }
@@ -77,8 +78,8 @@ const invalidateQueries = (resource: string, action: 'create' | 'update' | 'dele
 
     if (resource === 'discussions') {
         // When discussions change, invalidate the specific discussion and its class discussions
-        if (id) {
-            queryClient.invalidateQueries({ queryKey: ["discussions", id] });
+        if (normalizedId) {
+            queryClient.invalidateQueries({ queryKey: ["discussions", normalizedId] });
         }
     }
 };
@@ -128,13 +129,14 @@ const options: CreateDataProviderOptions = {
       getEndpoint: ({ resource }) => resource,
       buildQueryParams: async({variables})=> variables,
         mapResponse: async (response, { resource }) => {
+          if (!response.ok) {
+              throw new Error((await response.text()) || response.statusText);
+          }
           const json:CreateResponse = await response.json();
           // Invalidate cache after successful create
-          if (response.ok) {
-            const createdData = json.data as any;
-            const createdId = createdData?.id;
-            invalidateQueries(resource, 'create', createdId);
-          }
+          const createdData = json.data as any;
+          const createdId = createdData?.id;
+          invalidateQueries(resource, 'create', createdId);
           return json.data ?? [] ;
         }
       },
@@ -152,11 +154,12 @@ const options: CreateDataProviderOptions = {
       getEndpoint: ({ resource, id }) => `${resource}/${id}`,
       buildQueryParams: async({ id, variables }) => ({ id, ...variables }),
       mapResponse: async (response, { resource, id }) => {
+        if (!response.ok) {
+            throw new Error((await response.text()) || response.statusText);
+        }
         const json: CreateResponse = await response.json();
         // Invalidate cache after successful update
-        if (response.ok && id) {
-          invalidateQueries(resource, 'update', id);
-        }
+        invalidateQueries(resource, 'update', id);
         return json.data ?? null;
       }
     },
@@ -165,12 +168,29 @@ const options: CreateDataProviderOptions = {
       getEndpoint: ({ resource, id }) => `${resource}/${id}`,
       buildQueryParams: async({ id }) => ({ id }),
       mapResponse: async (response, { resource, id }) => {
-        const json: CreateResponse = await response.json();
-        // Invalidate cache after successful delete
-        if (response.ok && id) {
-          invalidateQueries(resource, 'delete', id);
+        if (!response.ok) {
+            throw new Error((await response.text()) || response.statusText);
         }
-        return json.data ?? null;
+
+        let json: CreateResponse | null = null;
+        const hasBody =
+            response.status !== 204 &&
+            response.headers.get("content-length") !== "0";
+
+        if (hasBody) {
+            const text = await response.text();
+            if (text) {
+                try {
+                    json = JSON.parse(text) as CreateResponse;
+                } catch {
+                    // ignore invalid/empty JSON bodies
+                }
+            }
+        }
+
+        const deletedId = id ?? (json?.data as any)?.id;
+        invalidateQueries(resource, 'deleteOne', deletedId);
+        return json?.data ?? null;
       }
     }
 
