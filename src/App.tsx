@@ -6,13 +6,14 @@ import routerProvider, {
   UnsavedChangesNotifier,
 } from "@refinedev/react-router";
 import {BrowserRouter, Outlet, Route, Routes, Navigate} from "react-router";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
 import "./App.css";
 import { Toaster } from "./components/refine-ui/notification/toaster";
 import { useNotificationProvider } from "./components/refine-ui/notification/use-notification-provider";
 import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
 import { dataProvider } from "./providers/data";
+import { queryClient } from "@/lib/queryClient";
 import { authProvider } from "./providers/auth";
 import {BookOpen, Clock, GraduationCap, Home, MessageSquare, Loader2} from "lucide-react";
 import {Layout} from "@/components/refine-ui/layout/layout.tsx";
@@ -49,17 +50,6 @@ function Logo() {
     />
   );
 }
-
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      refetchOnWindowFocus: false,
-      // Show stale data while refetching for better UX
-      refetchOnReconnect: true,
-    },
-  },
-});
 
 function App() {
   return (
@@ -160,7 +150,6 @@ function App() {
 }
 
 export default App;
-
 
 
 

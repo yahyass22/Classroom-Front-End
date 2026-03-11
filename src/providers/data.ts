@@ -3,7 +3,7 @@ import {createDataProvider, CreateDataProviderOptions} from "@refinedev/rest";
 import {BACKEND_BASE_URL} from "@/constants";
 import {CreateResponse, GetOneResponse, ListResponse} from "@/types";
 import {HttpError} from "@refinedev/core";
-import { queryClient } from "@/App";
+import { queryClient } from "@/lib/queryClient";
 
 const buildHttpError = async ( response: Response):Promise<HttpError> => {
     let message = 'Request failed.';
@@ -127,7 +127,7 @@ const options: CreateDataProviderOptions = {
     create: {
       getEndpoint: ({ resource }) => resource,
       buildQueryParams: async({variables})=> variables,
-        mapResponse: async (response) => {
+        mapResponse: async (response, { resource }) => {
           const json:CreateResponse = await response.json();
           // Invalidate cache after successful create
           if (response.ok) {
@@ -151,7 +151,7 @@ const options: CreateDataProviderOptions = {
     update: {
       getEndpoint: ({ resource, id }) => `${resource}/${id}`,
       buildQueryParams: async({ id, variables }) => ({ id, ...variables }),
-      mapResponse: async (response) => {
+      mapResponse: async (response, { resource, id }) => {
         const json: CreateResponse = await response.json();
         // Invalidate cache after successful update
         if (response.ok && id) {
@@ -164,7 +164,7 @@ const options: CreateDataProviderOptions = {
     deleteOne: {
       getEndpoint: ({ resource, id }) => `${resource}/${id}`,
       buildQueryParams: async({ id }) => ({ id }),
-      mapResponse: async (response) => {
+      mapResponse: async (response, { resource, id }) => {
         const json: CreateResponse = await response.json();
         // Invalidate cache after successful delete
         if (response.ok && id) {

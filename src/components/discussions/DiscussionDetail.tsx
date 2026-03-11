@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/services/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -121,8 +121,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const params = useParams();
   const resolvedClassId = classId || params.id as string;
   const { data: session } = useSession();
-  const queryClient = useQueryClient();
-  const { invalidateDiscussions, invalidateDashboard } = useCacheInvalidation();
+  const { invalidateDiscussions, invalidateDashboard, invalidateDiscussion } = useCacheInvalidation();
   const [replyContent, setReplyContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -130,7 +129,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const [showDeleteDialog, setShowDeleteDialog] = useState<number | null>(null);
 
   const { data: discussion, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['discussion', discussionId, resolvedClassId],
+    queryKey: ['discussions', discussionId],
     queryFn: async () => {
       const endpoint = resolvedClassId
         ? `/classes/${resolvedClassId}/discussions/${discussionId}`
@@ -183,8 +182,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       });
     },
     onSuccess: () => {
-      // Don't invalidate on vote - too frequent, let it ride on stale time
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      // Keep refresh scoped to the discussion detail to avoid list churn.
+      invalidateDiscussion(discussionId);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Action failed');
@@ -210,7 +209,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.delete(`/discussions/${discussionId}/replies/${replyId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussion(discussionId);
       setShowDeleteDialog(null);
       toast.success('Reply deleted successfully');
     },
@@ -225,7 +224,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/pin`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussion(discussionId);
       toast.success('Discussion pin toggled');
     },
     onError: (error: any) => {
@@ -239,7 +238,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/lock`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussion(discussionId);
       toast.success('Discussion lock toggled');
     },
     onError: (error: any) => {
