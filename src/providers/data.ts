@@ -51,16 +51,24 @@ const invalidateQueries = (resource: string, action: 'create' | 'update' | 'dele
     // Invalidate the specific resource
     queryClient.invalidateQueries({ queryKey: [resource] });
 
-    // Invalidate specific item if ID is provided
+    // Invalidate or remove specific item if ID is provided
     if (normalizedId) {
-        queryClient.invalidateQueries({ queryKey: [resource, normalizedId] });
+        if (action === 'deleteOne') {
+            queryClient.removeQueries({ queryKey: [resource, normalizedId] });
+        } else {
+            queryClient.invalidateQueries({ queryKey: [resource, normalizedId] });
+        }
     }
 
     // Cross-resource invalidation rules
     if (resource === 'classes') {
         // When classes change, also invalidate discussions for that class
         if (normalizedId) {
-            queryClient.invalidateQueries({ queryKey: ["discussions", "class", normalizedId] });
+            if (action === 'deleteOne') {
+                queryClient.removeQueries({ queryKey: ["discussions", "class", normalizedId] });
+            } else {
+                queryClient.invalidateQueries({ queryKey: ["discussions", "class", normalizedId] });
+            }
         }
         queryClient.invalidateQueries({ queryKey: ["discussions"] });
     }
@@ -79,7 +87,11 @@ const invalidateQueries = (resource: string, action: 'create' | 'update' | 'dele
     if (resource === 'discussions') {
         // When discussions change, invalidate the specific discussion and its class discussions
         if (normalizedId) {
-            queryClient.invalidateQueries({ queryKey: ["discussions", normalizedId] });
+            if (action === 'deleteOne') {
+                queryClient.removeQueries({ queryKey: ["discussions", normalizedId] });
+            } else {
+                queryClient.invalidateQueries({ queryKey: ["discussions", normalizedId] });
+            }
         }
     }
 };
@@ -130,7 +142,7 @@ const options: CreateDataProviderOptions = {
       buildQueryParams: async({variables})=> variables,
         mapResponse: async (response, { resource }) => {
           if (!response.ok) {
-              throw new Error((await response.text()) || response.statusText);
+              throw await buildHttpError(response);
           }
           const json:CreateResponse = await response.json();
           // Invalidate cache after successful create
@@ -155,7 +167,7 @@ const options: CreateDataProviderOptions = {
       buildQueryParams: async({ id, variables }) => ({ id, ...variables }),
       mapResponse: async (response, { resource, id }) => {
         if (!response.ok) {
-            throw new Error((await response.text()) || response.statusText);
+            throw await buildHttpError(response);
         }
         const json: CreateResponse = await response.json();
         // Invalidate cache after successful update
@@ -169,7 +181,7 @@ const options: CreateDataProviderOptions = {
       buildQueryParams: async({ id }) => ({ id }),
       mapResponse: async (response, { resource, id }) => {
         if (!response.ok) {
-            throw new Error((await response.text()) || response.statusText);
+            throw await buildHttpError(response);
         }
 
         let json: CreateResponse | null = null;
