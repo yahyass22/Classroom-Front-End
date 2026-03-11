@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/services/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router";
+import { useCacheInvalidation } from "@/hooks/useCacheInvalidation";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -120,7 +121,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const params = useParams();
   const resolvedClassId = classId || params.id as string;
   const { data: session } = useSession();
-  const queryClient = useQueryClient();
+  const { invalidateDiscussions, invalidateDashboard, invalidateDiscussion } = useCacheInvalidation();
   const [replyContent, setReplyContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -128,7 +129,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const [showDeleteDialog, setShowDeleteDialog] = useState<number | null>(null);
 
   const { data: discussion, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ['discussion', discussionId, resolvedClassId],
+    queryKey: ['discussions', discussionId],
     queryFn: async () => {
       const endpoint = resolvedClassId
         ? `/classes/${resolvedClassId}/discussions/${discussionId}`
@@ -136,6 +137,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       const response = await apiClient.get<{ data: DiscussionDetail }>(endpoint);
       return response.data;
     },
+    staleTime: 30 * 1000, // 30 seconds - discussions can change frequently
   });
 
   const createReplyMutation = useMutation({
@@ -146,7 +148,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussions();
+      invalidateDashboard();
       setReplyContent('');
       setReplyingTo(null);
       toast.success('Reply posted successfully');
@@ -163,7 +166,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussions();
       setEditingId(null);
       toast.success('Reply updated successfully');
     },
@@ -179,7 +182,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      // Keep refresh scoped to the discussion detail to avoid list churn.
+      invalidateDiscussion(discussionId);
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Action failed');
@@ -191,7 +195,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.post(`/discussions/${discussionId}/replies/${replyId}/accept`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussions();
+      invalidateDashboard();
       toast.success('Answer status updated');
     },
     onError: (error: Error) => {
@@ -204,7 +209,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.delete(`/discussions/${discussionId}/replies/${replyId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussion(discussionId);
       setShowDeleteDialog(null);
       toast.success('Reply deleted successfully');
     },
@@ -219,7 +224,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/pin`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussion(discussionId);
       toast.success('Discussion pin toggled');
     },
     onError: (error: any) => {
@@ -233,7 +238,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.post(`/classes/${resolvedClassId}/discussions/${discussionId}/lock`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussion(discussionId);
       toast.success('Discussion lock toggled');
     },
     onError: (error: any) => {

@@ -14,6 +14,17 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-refine": ["@refinedev/core", "@refinedev/rest", "@refinedev/react-router"],
+          "vendor-ui": ["@radix-ui/react-accordion", "@radix-ui/react-dialog", "lucide-react"],
+          "vendor-charts": ["recharts"],
+        },
+      },
+    },
+  },
   ssr: {
     noExternal: ["lightningcss"],
   },

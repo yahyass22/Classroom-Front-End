@@ -98,7 +98,9 @@ export function DiscussionsList({ classId, filterType = 'all', sortBy = 'lastAct
   const resolvedClassId = classId || params.id;
 
   const { data: discussionsData, isLoading } = useQuery({
-    queryKey: ['discussions', resolvedClassId, filterType, sortBy],
+    queryKey: resolvedClassId
+      ? ['discussions', 'class', resolvedClassId, filterType, sortBy]
+      : ['discussions', 'all', filterType, sortBy],
     queryFn: async () => {
       const endpoint = resolvedClassId
         ? `/classes/${resolvedClassId}/discussions?type=${filterType}&sortBy=${sortBy}&limit=50`

@@ -3,6 +3,7 @@ import {createDataProvider, CreateDataProviderOptions} from "@refinedev/rest";
 import {BACKEND_BASE_URL} from "@/constants";
 import {CreateResponse, GetOneResponse, ListResponse} from "@/types";
 import {HttpError} from "@refinedev/core";
+import { queryClient } from "@/lib/queryClient";
 
 const buildHttpError = async ( response: Response):Promise<HttpError> => {
     let message = 'Request failed.';
@@ -36,6 +37,63 @@ const flattenFilters = (filters: any[]): any[] => {
         }
     });
     return result;
+};
+
+/**
+ * Invalidates relevant queries after a mutation
+ * This ensures fresh data is fetched after create/update/delete operations
+ */
+const invalidateQueries = (resource: string, action: 'create' | 'update' | 'deleteOne', id?: string | number) => {
+    const normalizedId = id !== undefined && id !== null ? String(id) : undefined;
+    // Always invalidate dashboard when data changes
+    queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+
+    // Invalidate the specific resource
+    queryClient.invalidateQueries({ queryKey: [resource] });
+
+    // Invalidate or remove specific item if ID is provided
+    if (normalizedId) {
+        if (action === 'deleteOne') {
+            queryClient.removeQueries({ queryKey: [resource, normalizedId] });
+        } else {
+            queryClient.invalidateQueries({ queryKey: [resource, normalizedId] });
+        }
+    }
+
+    // Cross-resource invalidation rules
+    if (resource === 'classes') {
+        // When classes change, also invalidate discussions for that class
+        if (normalizedId) {
+            if (action === 'deleteOne') {
+                queryClient.removeQueries({ queryKey: ["discussions", "class", normalizedId] });
+            } else {
+                queryClient.invalidateQueries({ queryKey: ["discussions", "class", normalizedId] });
+            }
+        }
+        queryClient.invalidateQueries({ queryKey: ["discussions"] });
+    }
+
+    if (resource === 'subjects') {
+        // When subjects change, classes might be affected
+        queryClient.invalidateQueries({ queryKey: ["classes"] });
+    }
+
+    if (resource === 'users') {
+        // When users change, classes and discussions might be affected
+        queryClient.invalidateQueries({ queryKey: ["classes"] });
+        queryClient.invalidateQueries({ queryKey: ["discussions"] });
+    }
+
+    if (resource === 'discussions') {
+        // When discussions change, invalidate the specific discussion and its class discussions
+        if (normalizedId) {
+            if (action === 'deleteOne') {
+                queryClient.removeQueries({ queryKey: ["discussions", normalizedId] });
+            } else {
+                queryClient.invalidateQueries({ queryKey: ["discussions", normalizedId] });
+            }
+        }
+    }
 };
 
 const options: CreateDataProviderOptions = {
@@ -82,8 +140,15 @@ const options: CreateDataProviderOptions = {
     create: {
       getEndpoint: ({ resource }) => resource,
       buildQueryParams: async({variables})=> variables,
-        mapResponse: async (response) => {
+        mapResponse: async (response, { resource }) => {
+          if (!response.ok) {
+              throw await buildHttpError(response);
+          }
           const json:CreateResponse = await response.json();
+          // Invalidate cache after successful create
+          const createdData = json.data as any;
+          const createdId = createdData?.id;
+          invalidateQueries(resource, 'create', createdId);
           return json.data ?? [] ;
         }
       },
@@ -95,6 +160,50 @@ const options: CreateDataProviderOptions = {
           const json : GetOneResponse= await response.json();
           return json.data ?? null;
         }
+    },
+
+    update: {
+      getEndpoint: ({ resource, id }) => `${resource}/${id}`,
+      buildQueryParams: async({ id, variables }) => ({ id, ...variables }),
+      mapResponse: async (response, { resource, id }) => {
+        if (!response.ok) {
+            throw await buildHttpError(response);
+        }
+        const json: CreateResponse = await response.json();
+        // Invalidate cache after successful update
+        invalidateQueries(resource, 'update', id);
+        return json.data ?? null;
+      }
+    },
+
+    deleteOne: {
+      getEndpoint: ({ resource, id }) => `${resource}/${id}`,
+      buildQueryParams: async({ id }) => ({ id }),
+      mapResponse: async (response, { resource, id }) => {
+        if (!response.ok) {
+            throw await buildHttpError(response);
+        }
+
+        let json: CreateResponse | null = null;
+        const hasBody =
+            response.status !== 204 &&
+            response.headers.get("content-length") !== "0";
+
+        if (hasBody) {
+            const text = await response.text();
+            if (text) {
+                try {
+                    json = JSON.parse(text) as CreateResponse;
+                } catch {
+                    // ignore invalid/empty JSON bodies
+                }
+            }
+        }
+
+        const deletedId = id ?? (json?.data as any)?.id;
+        invalidateQueries(resource, 'deleteOne', deletedId);
+        return json?.data ?? null;
+      }
     }
 
 };

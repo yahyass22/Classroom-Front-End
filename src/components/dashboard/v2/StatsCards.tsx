@@ -1,7 +1,9 @@
-import { GraduationCap, BookOpen, Users, ClipboardList } from "lucide-react";
+import { GraduationCap, BookOpen, Users, ClipboardList, WifiOff } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDashboardStats } from "@/hooks/useDashboard";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 const statCards = [
   {
@@ -31,7 +33,37 @@ const statCards = [
 ];
 
 export const StatsCards = () => {
-  const { data: stats, isLoading, error } = useDashboardStats();
+  const { data: stats, isLoading, error, refetch } = useDashboardStats();
+
+  if (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const isNetworkError = errorMessage.includes("Failed to fetch") || errorMessage.includes("Network");
+    
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="col-span-full">
+          <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+            <WifiOff className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between w-full">
+              <span>
+                {isNetworkError 
+                  ? "Cannot connect to server. Please make sure the backend is running."
+                  : "Failed to load statistics."}
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => refetch()}
+                className="h-8 ml-4"
+              >
+                Retry
+              </Button>
+            </AlertDescription>
+          </Alert>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -51,8 +83,6 @@ export const StatsCards = () => {
                   <Skeleton className="h-8 w-24" />
                   <Skeleton className="h-4 w-32" />
                 </div>
-              ) : error ? (
-                <p className="text-sm text-destructive">Error</p>
               ) : (
                 <>
                   <div className="text-3xl font-bold tracking-tight">

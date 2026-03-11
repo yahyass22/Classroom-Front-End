@@ -10,14 +10,24 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, LayoutDashboard, RefreshCcw, BarChart3, Activity, Users2, ListChecks } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useQuery } from "@tanstack/react-query";
 import { SectionHeader } from "@/components/section-header";
+import { StaleIndicator } from "@/components/StaleIndicator";
+import { dashboardApi } from "@/services/dashboard";
 
 const Dashboard = () => {
   const { data: session } = useSession();
   const queryClient = useQueryClient();
   const userRole = session?.user?.role;
   const isGuest = userRole === "guest" || localStorage.getItem('guest_mode') === 'true';
+
+  // Get query state for stale indicator
+  const { dataUpdatedAt, isStale, isFetching, refetch } = useQuery({
+    queryKey: ["dashboard", "stats"],
+    queryFn: dashboardApi.getStats,
+    staleTime: 2 * 60 * 1000,
+    enabled: false, // Don't fetch, just get state from cache
+  });
 
   const handleRefresh = () => {
     queryClient.invalidateQueries({ queryKey: ["dashboard"] });
@@ -53,12 +63,20 @@ const Dashboard = () => {
              </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3 self-end md:self-center">
              <div className="hidden lg:flex items-center gap-2 text-muted-foreground mr-4 pr-4 border-r border-border/50">
                 <CalendarDays className="h-4 w-4" />
                 <p className="text-sm font-semibold">{currentDate}</p>
              </div>
+             {/* Stale Indicator */}
+             <StaleIndicator
+                compact
+                lastUpdatedAt={dataUpdatedAt > 0 ? new Date(dataUpdatedAt) : null}
+                isStale={isStale}
+                isFetching={isFetching}
+                onRefresh={() => refetch?.()}
+             />
              <Button variant="outline" size="sm" onClick={handleRefresh} className="h-10 gap-2 shadow-sm">
                 <RefreshCcw className="h-4 w-4" />
                 Sync Data
@@ -78,12 +96,12 @@ const Dashboard = () => {
 
       {/* --- MODULE 2: GROWTH & COMPOSITION --- */}
       <section className="space-y-12">
-        <SectionHeader 
-          icon={BarChart3} 
-          title="Enrollment & Academic Insights" 
+        <SectionHeader
+          icon={BarChart3}
+          title="Enrollment & Academic Insights"
           description="Long-term growth trends and departmental student distribution analytics."
         />
-        
+
         {/* Row 1: Overall System Growth (Full Width) */}
         <div className="w-full">
           <EnrollmentLineChart />
@@ -105,9 +123,9 @@ const Dashboard = () => {
 
       {/* --- MODULE 4: DIRECTORY & ACTIVITY --- */}
       <section>
-        <SectionHeader 
-          icon={ListChecks} 
-          title="Recent Activity & Leadership" 
+        <SectionHeader
+          icon={ListChecks}
+          title="Recent Activity & Leadership"
           description="Tracking the latest class updates and top-performing faculty members."
         />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -119,7 +137,7 @@ const Dashboard = () => {
           </div>
         </div>
       </section>
-      
+
       {/* --- FOOTER STATUS BAR --- */}
       <footer className="mt-8 p-6 rounded-2xl border border-border/50 bg-card/30 backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-4">
          <div className="flex items-center gap-3">
@@ -128,9 +146,12 @@ const Dashboard = () => {
                 <div key={i} className="h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[8px] font-bold">U{i}</div>
               ))}
             </div>
-            <p className="text-xs text-muted-foreground font-medium">
-               Live Data Feed: <span className="text-foreground">Synchronized 30s ago</span>
-            </p>
+            <StaleIndicator
+                compact
+                lastUpdatedAt={dataUpdatedAt > 0 ? new Date(dataUpdatedAt) : null}
+                isStale={isStale}
+                isFetching={isFetching}
+             />
          </div>
          <div className="flex items-center gap-6 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
             <span className="flex items-center gap-2">
