@@ -121,21 +121,34 @@ export interface UserSignupTrend {
 
 const apiClient = {
   async get<T>(endpoint: string): Promise<T> {
-    // BASE_URL already includes /api, so we just append the endpoint
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-    });
+    // Normalize BASE_URL - remove trailing /api or / and ensure consistent format
+    const normalizedBase = BASE_URL.replace(/\/api\/?$/, '').replace(/\/$/, '');
+    const url = `${normalizedBase}/api${endpoint}`;
+    
+    console.log('📊 Dashboard API request:', url);
+    
+    try {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: "Request failed" }));
-      throw new Error(error.message || `HTTP ${response.status}`);
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: "Request failed" }));
+        console.error('❌ Dashboard API error:', response.status, error);
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log('📊 Dashboard API response:', data);
+      return data;
+    } catch (error) {
+      console.error('❌ Dashboard API fetch error:', error instanceof Error ? error.message : error);
+      throw error;
     }
-
-    return response.json();
   },
 };
 

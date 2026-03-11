@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/services/api";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useCacheInvalidation } from "@/hooks/useCacheInvalidation";
 
 const discussionTypes = [
   { value: 'general', label: 'General', description: 'Open discussion about anything', color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300' },
@@ -58,8 +59,10 @@ export function DiscussionForm() {
   const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
+  const { invalidateDiscussions, invalidateDashboard } = useCacheInvalidation();
   const classIdFromParams = params.id as string;
-  
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [type, setType] = useState<'general' | 'question' | 'announcement' | 'resource'>('general');
@@ -72,8 +75,8 @@ export function DiscussionForm() {
   const isGlobalDiscussion = location.pathname.startsWith('/discussions/new');
 
   // Fetch available classes with server-side search
-  const { 
-    data: classesData, 
+  const {
+    data: classesData,
     isLoading: classesLoading,
     isError: classesError,
     error: classesErrorObj,
@@ -85,6 +88,7 @@ export function DiscussionForm() {
       return response.data;
     },
     enabled: isGlobalDiscussion,
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const classes = classesData || [];
@@ -122,6 +126,9 @@ export function DiscussionForm() {
       console.log('🎉 Success:', data);
       const targetClassId = classIdFromParams || selectedClassId;
       toast.success('Discussion created successfully');
+      // Invalidate discussion and dashboard caches
+      invalidateDiscussions();
+      invalidateDashboard();
       // Backend returns { data: discussion }, so access data.data.id
       const discussionId = data.data?.id || data.id;
       navigate(classIdFromParams

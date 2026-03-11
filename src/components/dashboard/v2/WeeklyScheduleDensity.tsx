@@ -11,23 +11,22 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { ChevronLeft, ChevronRight, Search, Clock, User, Calendar as CalendarIcon, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, Clock, User, RotateCcw } from "lucide-react";
 
 const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 const START_HOUR = 8;
 const END_HOUR = 17;
-const SLOT_BASE_HEIGHT_COMFORTABLE = 52;
+const SLOT_BASE_HEIGHT_COMFORTABLE = 80;
 const SLOT_BASE_HEIGHT_COMPACT = 42;
 const SLOT_GRID_COLUMNS = 4;
 const SLOT_ROW_HEIGHT = 30;
 const SLOT_ROW_GAP = 3;
 const SLOT_VERTICAL_PADDING = 6;
+
+// Comfortable mode specific constants
+const COMFORTABLE_SLOT_HEIGHT = 120;
+const COMFORTABLE_SLOT_GAP = 12;
+const COMFORTABLE_VERTICAL_PADDING = 16;
 
 interface RoutineItem {
   classId: number;
@@ -113,6 +112,20 @@ const addDays = (date: Date, days: number) => {
 };
 
 const fmtDayNumber = (date: Date) => date.getDate().toString();
+const fmtMonthShort = (date: Date) => date.toLocaleDateString("en-US", { month: "short" });
+const fmtWeekday = (date: Date) => date.toLocaleDateString("en-US", { weekday: "long" });
+
+const getWeekdayIndex = (date: Date) => {
+  const day = date.getDay();
+  if (day === 0) return 0;
+  const idx = day - 1;
+  return Math.max(0, Math.min(idx, DAYS.length - 1));
+};
+
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
 
 const getWeekOfMonth = (date: Date) => {
   const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -146,31 +159,53 @@ const getTheme = (departmentName?: string | null, departmentCode?: string | null
   return "bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
 };
 
-const groupByDepartment = (items: RoutineItem[]) => {
-  const groups = new Map<string, DepartmentGroup>();
+// Get gradient background for comfortable mode cards
+const getComfortableCardGradient = (departmentCode?: string | null, subjectCode?: string) => {
+  const code = (departmentCode || "").toUpperCase().trim();
+  
+  const gradients: Record<string, string> = {
+    "COMPUTER SCIENCE": "from-sky-500 to-sky-600",
+    "CS": "from-sky-500 to-sky-600",
+    "MATHEMATICS": "from-indigo-500 to-indigo-600",
+    "MATH": "from-indigo-500 to-indigo-600",
+    "PHYSICS": "from-purple-500 to-purple-600",
+    "PHYS": "from-purple-500 to-purple-600",
+    "CHEMISTRY": "from-pink-500 to-pink-600",
+    "CHEM": "from-pink-500 to-pink-600",
+    "BIOLOGY": "from-green-500 to-green-600",
+    "BIO": "from-green-500 to-green-600",
+    "ENGLISH": "from-rose-500 to-rose-600",
+    "ENG": "from-rose-500 to-rose-600",
+    "HISTORY": "from-orange-500 to-orange-600",
+    "HIST": "from-orange-500 to-orange-600",
+    "GEOGRAPHY": "from-teal-500 to-teal-600",
+    "GEOG": "from-teal-500 to-teal-600",
+    "ECONOMICS": "from-yellow-500 to-yellow-600",
+    "ECON": "from-yellow-500 to-yellow-600",
+    "BUSINESS ADMINISTRATION": "from-slate-500 to-slate-600",
+    "BUSINESS ADMIN": "from-slate-500 to-slate-600",
+    "ENGINEERING": "from-blue-500 to-blue-600",
+    "ENGR": "from-blue-500 to-blue-600",
+    "PSYCHOLOGY": "from-violet-500 to-violet-600",
+    "PSY": "from-violet-500 to-violet-600",
+    "SOCIOLOGY": "from-fuchsia-500 to-fuchsia-600",
+    "SOC": "from-fuchsia-500 to-fuchsia-600",
+    "POLITICAL SCIENCE": "from-red-500 to-red-600",
+    "POLS": "from-red-500 to-red-600",
+    "PHILOSOPHY": "from-lime-500 to-lime-600",
+    "PHIL": "from-lime-500 to-lime-600",
+    "EDUCATION": "from-cyan-500 to-cyan-600",
+    "EDUC": "from-cyan-500 to-cyan-600",
+    "FINE ARTS": "from-red-400 to-red-500",
+    "ART": "from-red-400 to-red-500",
+    "MUSIC": "from-rose-400 to-rose-500",
+    "MUS": "from-rose-400 to-rose-500",
+    "PHYSICAL EDUCATION": "from-amber-400 to-amber-500",
+    "PE": "from-amber-400 to-amber-500",
+    "LAW": "from-slate-400 to-slate-500",
+  };
 
-  items.forEach((item) => {
-    const fallbackPrefix = item.subjectCode.replace(/[0-9]/g, "").toUpperCase();
-    const departmentCode = (item.departmentCode || fallbackPrefix || "DEFAULT").toUpperCase();
-    const departmentName = item.departmentName || departmentCode;
-
-    if (!groups.has(departmentCode)) {
-      groups.set(departmentCode, {
-        departmentCode,
-        departmentName,
-        items: [],
-        codes: [],
-      });
-    }
-
-    const group = groups.get(departmentCode)!;
-    group.items.push(item);
-    if (!group.codes.includes(item.subjectCode)) {
-      group.codes.push(item.subjectCode);
-    }
-  });
-
-  return Array.from(groups.values()).sort((a, b) => a.departmentCode.localeCompare(b.departmentCode));
+  return gradients[code] || gradients[(subjectCode || "").replace(/[0-9]/g, "").toUpperCase()] || "from-slate-400 to-slate-500";
 };
 
 const getCapsuleColSpan = (codesCount: number) => {
@@ -199,32 +234,83 @@ const estimateRowsForCapsules = (spans: number[]) => {
   return rows;
 };
 
-export function WeeklyScheduleDensity() {
+// Memoized helper to avoid re-calculating group logic inside loops
+const getDayTimeGroups = (items: RoutineItem[]) => {
+  const groups = new Map<string, DepartmentGroup>();
+
+  items.forEach((item) => {
+    const fallbackPrefix = item.subjectCode.replace(/[0-9]/g, "").toUpperCase();
+    const departmentCode = (item.departmentCode || fallbackPrefix || "DEFAULT").toUpperCase();
+    const departmentName = item.departmentName || departmentCode;
+
+    if (!groups.has(departmentCode)) {
+      groups.set(departmentCode, {
+        departmentCode,
+        departmentName,
+        items: [],
+        codes: [],
+      });
+    }
+
+    const group = groups.get(departmentCode)!;
+    group.items.push(item);
+    if (!group.codes.includes(item.subjectCode)) {
+      group.codes.push(item.subjectCode);
+    }
+  });
+
+  return Array.from(groups.values()).sort((a, b) => {
+    const spanDiff = getCapsuleColSpan(b.codes.length) - getCapsuleColSpan(a.codes.length);
+    if (spanDiff !== 0) return spanDiff;
+    return a.departmentCode.localeCompare(b.departmentCode);
+  });
+};
+
+export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity() {
   const { data, isLoading } = useScheduleHeatmap();
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [focusDept, setFocusDept] = React.useState<string>("all");
   const [density, setDensity] = React.useState<"comfortable" | "compact">("compact");
   const [weekStart, setWeekStart] = React.useState<Date>(() => getWeekStartMonday(new Date()));
+  const [selectedDay, setSelectedDay] = React.useState<string>(() => DAYS[getWeekdayIndex(new Date())] || DAYS[0]);
   const [currentTime, setCurrentTime] = React.useState(new Date());
 
   React.useEffect(() => {
+    // Sync time every minute for the live pulse line
     const timer = setInterval(() => setCurrentTime(new Date()), 60000);
     return () => clearInterval(timer);
   }, []);
 
   const handleJumpToToday = () => {
     setWeekStart(getWeekStartMonday(new Date()));
+    setSelectedDay(DAYS[getWeekdayIndex(new Date())] || DAYS[0]);
   };
 
-  const weekInfo = fmtDribbbleRange(weekStart);
+  const weekInfo = React.useMemo(() => fmtDribbbleRange(weekStart), [weekStart]);
 
   const slotBaseHeight = density === "compact" ? SLOT_BASE_HEIGHT_COMPACT : SLOT_BASE_HEIGHT_COMFORTABLE;
   const capsuleMinHeight = density === "compact" ? 24 : 30;
-  const rowGap = density === "compact" ? 4 : 5;
-  const slotVerticalPadding = density === "compact" ? 8 : 10;
+  const rowGap = density === "compact" ? 4 : COMFORTABLE_SLOT_GAP;
+  const slotVerticalPadding = density === "compact" ? 8 : COMFORTABLE_VERTICAL_PADDING;
   const capsuleTextClass = density === "compact" ? "text-[10px] font-bold" : "text-[11px] font-bold";
-  const capsulePaddingClass = density === "compact" ? "px-2 py-0.5" : "px-2.5 py-1";
+  const capsulePaddingClass = density === "compact" ? "px-2 py-0.5" : "px-3 py-1.5";
+
+  // Comfortable mode specific classes
+  const isComfortable = density === "comfortable";
+  const comfortableCardClasses = isComfortable
+    ? "rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+    : "rounded-xl";
+
+  // Helper to get teacher initials
+  const getTeacherInitials = (name?: string) => {
+    if (!name) return "??";
+    const parts = name.trim().split(" ").filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   const routineData = React.useMemo(() => {
     const source = Array.isArray(data) ? (data as RoutineItem[]) : [];
@@ -259,8 +345,8 @@ export function WeeklyScheduleDensity() {
 
   const filteredData = React.useMemo(() => {
     const q = searchQuery.toLowerCase();
+    if (!q) return routineData;
     return routineData.filter((item) => {
-      if (!q) return true;
       return (
         item.className.toLowerCase().includes(q) ||
         item.subjectCode.toLowerCase().includes(q) ||
@@ -269,73 +355,71 @@ export function WeeklyScheduleDensity() {
     });
   }, [routineData, searchQuery]);
 
-  const slotsByDay = React.useMemo(() => {
-    const map = new Map<string, Map<string, RoutineItem[]>>();
-    DAYS.forEach((day) => map.set(day, new Map<string, RoutineItem[]>()));
+  // Pre-calculate all grid data and groups to avoid logic in render loop
+  const gridMatrix = React.useMemo(() => {
+    const matrix = new Map<string, Map<string, DepartmentGroup[]>>();
+    const timeKeySet = new Set<string>();
+    
+    DAYS.forEach((day) => matrix.set(day, new Map<string, DepartmentGroup[]>()));
+
+    // 1. Group raw items by day and time
+    const rawSlotsByDay = new Map<string, Map<string, RoutineItem[]>>();
+    DAYS.forEach((day) => rawSlotsByDay.set(day, new Map<string, RoutineItem[]>()));
 
     filteredData.forEach((item) => {
       const key = `${item.startTime}-${item.endTime}`;
-      const dayMap = map.get(item.day);
-      if (!dayMap) return;
-      if (!dayMap.has(key)) dayMap.set(key, []);
-      dayMap.get(key)!.push(item);
+      timeKeySet.add(key);
+      const dayMap = rawSlotsByDay.get(item.day);
+      if (dayMap) {
+        if (!dayMap.has(key)) dayMap.set(key, []);
+        dayMap.get(key)!.push(item);
+      }
     });
 
-    return map;
-  }, [filteredData]);
-
-  const timeKeys = React.useMemo(() => {
-    const set = new Set<string>();
-    DAYS.forEach((day) => {
-      const dayMap = slotsByDay.get(day);
-      if (!dayMap) return;
-      dayMap.forEach((_, key) => set.add(key));
-    });
-
-    return Array.from(set).sort((a, b) => {
+    const sortedTimeKeys = Array.from(timeKeySet).sort((a, b) => {
       const [aStart, aEnd] = a.split("-");
       const [bStart, bEnd] = b.split("-");
       const byStart = toMinutes(aStart) - toMinutes(bStart);
-      if (byStart !== 0) return byStart;
-      return toMinutes(aEnd) - toMinutes(bEnd);
+      return byStart !== 0 ? byStart : toMinutes(aEnd) - toMinutes(bEnd);
     });
-  }, [slotsByDay]);
 
-  const rowHeights = React.useMemo(() => {
+    // 2. Process groups and calculate heights
     const heights: Record<string, number> = {};
-
-    timeKeys.forEach((key) => {
-      let maxRows = 1;
-
+    
+    sortedTimeKeys.forEach((key) => {
+      let maxRowsInRow = 1;
+      
       DAYS.forEach((day) => {
-        const items = slotsByDay.get(day)?.get(key) || [];
-        const orderedGroups = groupByDepartment(items).sort((a, b) => {
-          const spanDiff = getCapsuleColSpan(b.codes.length) - getCapsuleColSpan(a.codes.length);
-          if (spanDiff !== 0) return spanDiff;
-          return a.departmentCode.localeCompare(b.departmentCode);
-        });
+        const items = rawSlotsByDay.get(day)?.get(key) || [];
+        const groups = getDayTimeGroups(items);
+        matrix.get(day)!.set(key, groups);
 
-        const spans = orderedGroups.map((group) => getCapsuleColSpan(group.codes.length));
-        const rows = estimateRowsForCapsules(spans);
-        maxRows = Math.max(maxRows, rows || 1);
+        const spans = groups.map((g) => getCapsuleColSpan(g.codes.length));
+        maxRowsInRow = Math.max(maxRowsInRow, estimateRowsForCapsules(spans));
       });
 
-      const effectiveRowHeight = Math.max(SLOT_ROW_HEIGHT, capsuleMinHeight + 2);
-      const effectiveRowGap = Math.max(SLOT_ROW_GAP, rowGap);
-      const dynamicHeight =
-        maxRows * effectiveRowHeight +
-        Math.max(0, maxRows - 1) * effectiveRowGap +
-        Math.max(SLOT_VERTICAL_PADDING, slotVerticalPadding);
+      const effectiveRowHeight = density === "comfortable" 
+        ? COMFORTABLE_SLOT_HEIGHT 
+        : Math.max(SLOT_ROW_HEIGHT, capsuleMinHeight + 2);
+      
+      const dynamicHeight = density === "comfortable"
+        ? maxRowsInRow * COMFORTABLE_SLOT_HEIGHT + Math.max(0, maxRowsInRow - 1) * COMFORTABLE_SLOT_GAP + COMFORTABLE_VERTICAL_PADDING
+        : maxRowsInRow * effectiveRowHeight + Math.max(0, maxRowsInRow - 1) * rowGap + slotVerticalPadding;
 
-      heights[key] = Math.max(slotBaseHeight, dynamicHeight);
+      heights[key] = density === "comfortable" 
+        ? Math.max(SLOT_BASE_HEIGHT_COMFORTABLE, dynamicHeight)
+        : Math.max(slotBaseHeight, dynamicHeight);
     });
 
-    return heights;
-  }, [timeKeys, slotsByDay, slotBaseHeight, capsuleMinHeight, rowGap, slotVerticalPadding]);
+    return { matrix, sortedTimeKeys, heights };
+  }, [filteredData, slotBaseHeight, capsuleMinHeight, rowGap, slotVerticalPadding, density]);
+
+  const { matrix: slotsByDay, sortedTimeKeys: timeKeys, heights: rowHeights } = gridMatrix;
 
   const livePulsePosition = React.useMemo(() => {
+    if (isComfortable) return null;
     const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-    let accumulatedHeight = 16 * 4;
+    let accumulatedHeight = 16 * 4; // Header height
 
     for (const key of timeKeys) {
       const [start, end] = key.split("-").map(toMinutes);
@@ -346,9 +430,52 @@ export function WeeklyScheduleDensity() {
       accumulatedHeight += rowHeights[key];
     }
     return null;
-  }, [currentTime, timeKeys, rowHeights]);
+  }, [currentTime, timeKeys, rowHeights, isComfortable]);
 
   const weekDates = React.useMemo(() => DAYS.map((_, index) => addDays(weekStart, index)), [weekStart]);
+  const selectedDayIndex = Math.max(0, DAYS.indexOf(selectedDay));
+  const selectedDate = weekDates[selectedDayIndex] || weekDates[0];
+  const selectedDayLabel = fmtWeekday(selectedDate);
+  const selectedMonth = fmtMonthShort(selectedDate);
+  const isSelectedDayToday = isSameDay(selectedDate, new Date());
+
+  const comfortableGrid = React.useMemo(() => {
+    const dayItems = filteredData.filter((item) => item.day === selectedDay);
+    const timeKeySet = new Set<string>();
+    const rawSlots = new Map<string, RoutineItem[]>();
+
+    dayItems.forEach((item) => {
+      const key = `${item.startTime}-${item.endTime}`;
+      timeKeySet.add(key);
+      if (!rawSlots.has(key)) rawSlots.set(key, []);
+      rawSlots.get(key)!.push(item);
+    });
+
+    const sortedTimeKeys = Array.from(timeKeySet).sort((a, b) => {
+      const [aStart, aEnd] = a.split("-");
+      const [bStart, bEnd] = b.split("-");
+      const byStart = toMinutes(aStart) - toMinutes(bStart);
+      return byStart !== 0 ? byStart : toMinutes(aEnd) - toMinutes(bEnd);
+    });
+
+    const slots = new Map<string, DepartmentGroup[]>();
+    const heights: Record<string, number> = {};
+
+    sortedTimeKeys.forEach((key) => {
+      const groups = getDayTimeGroups(rawSlots.get(key) || []);
+      slots.set(key, groups);
+
+      const spans = groups.map((g) => getCapsuleColSpan(g.codes.length));
+      const maxRowsInRow = estimateRowsForCapsules(spans);
+      const dynamicHeight =
+        maxRowsInRow * COMFORTABLE_SLOT_HEIGHT +
+        Math.max(0, maxRowsInRow - 1) * COMFORTABLE_SLOT_GAP +
+        COMFORTABLE_VERTICAL_PADDING;
+      heights[key] = Math.max(SLOT_BASE_HEIGHT_COMFORTABLE, dynamicHeight);
+    });
+
+    return { slots, sortedTimeKeys, heights, total: dayItems.length };
+  }, [filteredData, selectedDay]);
 
   if (isLoading) {
     return <Skeleton className="h-[720px] w-full rounded-3xl" />;
@@ -481,9 +608,9 @@ export function WeeklyScheduleDensity() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card/30 backdrop-blur-sm shadow-sm overflow-hidden relative">
+        <div className="rounded-2xl bg-card/30 backdrop-blur-sm shadow-sm overflow-hidden relative">
           {livePulsePosition && (
-            <div 
+            <div
               className="absolute left-0 right-0 h-px bg-rose-500 z-30 pointer-events-none flex items-center"
               style={{ top: `${livePulsePosition}px` }}
             >
@@ -491,10 +618,238 @@ export function WeeklyScheduleDensity() {
             </div>
           )}
 
-          <div className="flex overflow-x-auto no-scrollbar">
-            <div className="w-20 shrink-0 border-r border-border bg-muted/30 relative z-40">
-              <div className="h-16 border-b border-border sticky top-0 bg-muted/40 backdrop-blur-md z-50 flex items-center justify-center">
-                 <Clock className="h-4 w-4 text-muted-foreground" />
+          {isComfortable ? (
+            <div className="p-5 lg:p-6">
+              <div className="grid gap-6 xl:grid-cols-[140px_1fr]">
+                {/* Minimal Day Info Card */}
+                <div className="rounded-2xl bg-background/50 p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[8px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">Day</p>
+                      <h3 className="mt-0.5 text-lg font-black tracking-tight text-foreground">{selectedDayLabel}</h3>
+                    </div>
+                  </div>
+                  <div className="mt-2 flex items-baseline gap-1.5">
+                    <span className="text-3xl font-black tracking-tight">{fmtDayNumber(selectedDate)}</span>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{selectedMonth}</span>
+                  </div>
+                  <div className="mt-3 flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
+                    <Clock className="h-3 w-3" />
+                    <span>{START_HOUR}:00 - {END_HOUR}:00</span>
+                  </div>
+                </div>
+
+                {/* Main Schedule Area */}
+                <div className="rounded-[2rem] bg-background/40 p-0">
+                  {/* Minimal Day Selector - No borders, clean */}
+                  <div className="flex items-center gap-1.5 pb-0">
+                    {DAYS.map((day, idx) => {
+                      const isActive = day === selectedDay;
+                      return (
+                        <Button
+                          key={day}
+                          variant="ghost"
+                          size="sm"
+                          className={cn(
+                            "h-9 rounded-xl text-[9px] font-black uppercase px-3 transition-all duration-200 border-0",
+                            isActive 
+                              ? "bg-foreground text-background shadow-lg scale-105" 
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          )}
+                          onClick={() => setSelectedDay(day)}
+                        >
+                          {day.substring(0, 3)}
+                        </Button>
+                      );
+                    })}
+                  </div>
+
+                  {comfortableGrid.sortedTimeKeys.length === 0 ? (
+                    <div className="py-20 text-center">
+                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/30">
+                        <Clock className="h-8 w-8 text-muted-foreground/50" />
+                      </div>
+                      <p className="text-base font-bold text-foreground">No sessions scheduled</p>
+                      <p className="text-sm text-muted-foreground mt-1">Enjoy your free time!</p>
+                    </div>
+                  ) : (
+                    <div className="pt-4 space-y-4">
+                      {comfortableGrid.sortedTimeKeys.map((key) => {
+                        const [start, end] = key.split("-");
+                        const groups = comfortableGrid.slots.get(key) || [];
+                        const isLive =
+                          isSelectedDayToday &&
+                          (() => {
+                            const nowMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+                            const [s, e] = key.split("-").map(toMinutes);
+                            return nowMinutes >= s && nowMinutes <= e;
+                          })();
+
+                        return (
+                          <div key={key} className="rounded-[1.5rem] bg-muted/15 p-3 md:p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className={cn(
+                                  "h-2.5 w-2.5 rounded-full",
+                                  isLive ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.45)]" : "bg-muted-foreground/30"
+                                )} />
+                                <div className="flex items-baseline gap-2">
+                                  <span className={cn("text-base font-black tracking-tight", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</span>
+                                  <span className="text-[11px] font-bold text-muted-foreground">to {end}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                              {groups.map((group) => {
+                                const gradient = getComfortableCardGradient(group.departmentCode, group.codes[0]);
+                                const isFocused = focusDept === "all" || group.departmentCode === focusDept;
+                                const displayCodes = group.codes.slice(0, 2);
+                                const remainingCodes = group.codes.length - displayCodes.length;
+                                const teacherName = group.items[0]?.teacherName || "Unknown";
+                                const displayItems = group.items.slice(0, 2);
+                                const remainingItems = group.items.length - displayItems.length;
+
+                                return (
+                                  <Tooltip key={`${selectedDay}-${key}-${group.departmentCode}`}>
+                                    <TooltipTrigger asChild>
+                                      <div
+                                        className={cn(
+                                          "relative overflow-hidden cursor-pointer group",
+                                          comfortableCardClasses,
+                                          !isFocused ? "opacity-20 grayscale blur-sm" : ""
+                                        )}
+                                      >
+                                        <div className={cn("absolute inset-0 bg-gradient-to-br", gradient, "opacity-95 group-hover:opacity-100 transition-opacity")} />
+                                        <div className="relative z-10 p-4 h-full flex flex-col text-white">
+                                          {/* Row 1: Subject codes + Time */}
+                                          <div className="flex items-center justify-between mb-3">
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {displayCodes.map((code, idx) => (
+                                                <Badge
+                                                  key={idx}
+                                                  className="bg-white/25 text-white border-white/40 text-[10px] font-bold px-2.5 py-0.5 rounded-md backdrop-blur-sm"
+                                                >
+                                                  {code}
+                                                </Badge>
+                                              ))}
+                                              {remainingCodes > 0 && (
+                                                <Badge className="bg-white/20 text-white border-white/30 text-[9px] font-bold px-2 py-0.5">
+                                                  +{remainingCodes}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 bg-white/25 backdrop-blur-md px-2.5 py-1 rounded-full">
+                                              <Clock className="h-3 w-3" />
+                                              <span className="text-[10px] font-bold">{start}</span>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Row 2: Department name */}
+                                          <p className="text-[10px] font-bold uppercase tracking-wider opacity-90 mb-3 line-clamp-1">
+                                            {group.departmentName}
+                                          </p>
+                                          
+                                          {/* Row 3: Class details */}
+                                          <div className="flex-1 space-y-2 mb-4">
+                                            {displayItems.map((item, idx) => (
+                                              <div key={idx} className="flex items-start gap-2">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-white/70 mt-1.5 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                  <p className="text-[11px] font-bold text-white leading-snug line-clamp-2">
+                                                    {item.className}
+                                                  </p>
+                                                  {item.subjectName && (
+                                                    <p className="text-[9px] text-white/80 leading-tight line-clamp-1 mt-0.5">
+                                                      {item.subjectName}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            ))}
+                                            {remainingItems > 0 && (
+                                              <div className="flex items-center gap-2 pl-3.5">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-white/50 mt-1.5" />
+                                                <p className="text-[9px] text-white/70 font-medium">
+                                                  +{remainingItems} more session{remainingItems > 1 ? "s" : ""}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                          
+                                          {/* Row 4: Teacher info with avatar */}
+                                          <div className="flex items-center gap-2.5 pt-3 border-t border-white/25">
+                                            <div className="h-8 w-8 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                                              <span className="text-[10px] font-bold">{getTeacherInitials(teacherName)}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-[10px] font-bold text-white line-clamp-1">
+                                                {teacherName}
+                                              </p>
+                                              <p className="text-[8px] text-white/70 font-medium">
+                                                {group.items.length} session{group.items.length > 1 ? "s" : ""}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="w-72 rounded-xl border border-border/50 bg-card p-4 shadow-2xl backdrop-blur-xl z-[100]">
+                                      <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
+                                            {group.departmentCode}
+                                          </Badge>
+                                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                                            <Clock className="h-3 w-3" />
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">{key.replace("-", " - ")}</span>
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-bold tracking-tight text-foreground">{group.departmentName}</p>
+                                          <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                                            {group.items.length} active session{group.items.length > 1 ? "s" : ""}
+                                          </p>
+                                        </div>
+                                        <div className="pt-3 border-t border-border/50 space-y-3">
+                                          {group.items.map((item, idx) => (
+                                            <div key={idx} className="flex flex-col">
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <Badge variant="secondary" className="text-[9px] font-bold">{item.subjectCode}</Badge>
+                                                <span className="text-[10px] font-bold text-foreground">{item.className}</span>
+                                              </div>
+                                              <div className="flex items-center gap-1.5 ml-1">
+                                                <User className="h-3 w-3 text-muted-foreground" />
+                                                <span className="text-[9px] font-medium text-muted-foreground">{item.teacherName}</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="flex overflow-x-auto no-scrollbar">
+            <div className={cn(
+              "shrink-0 border-r border-border bg-muted/30 relative z-40",
+              density === "comfortable" ? "w-24" : "w-20"
+            )}>
+              <div className={cn(
+                "border-b border-border sticky top-0 bg-muted/40 backdrop-blur-md z-50 flex items-center justify-center",
+                density === "comfortable" ? "h-20" : "h-16"
+              )}>
+                 <Clock className={cn("text-muted-foreground", density === "comfortable" ? "h-5 w-5" : "h-4 w-4")} />
               </div>
               {timeKeys.map((key) => {
                 const [start, end] = key.split("-");
@@ -507,10 +862,20 @@ export function WeeklyScheduleDensity() {
                 return (
                   <div key={key} className={cn(
                     "relative flex flex-col justify-center border-b border-border px-3 transition-colors",
+                    density === "comfortable" ? "px-4" : "px-3",
                     isLive ? "bg-rose-500/10" : ""
                   )} style={{ height: rowHeights[key] }}>
-                    <div className={cn("text-[11px] font-black tracking-tighter", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</div>
-                    <div className="text-[9px] font-bold text-muted-foreground leading-none">{end}</div>
+                    {density === "comfortable" ? (
+                      <>
+                        <div className={cn("text-[13px] font-black tracking-tighter", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</div>
+                        <div className="text-[10px] font-bold text-muted-foreground">to {end}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className={cn("text-[11px] font-black tracking-tighter", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</div>
+                        <div className="text-[9px] font-bold text-muted-foreground leading-none">{end}</div>
+                      </>
+                    )}
                   </div>
                 );
               })}
@@ -518,44 +883,195 @@ export function WeeklyScheduleDensity() {
 
             <div className="flex min-w-0 flex-1 relative">
               {DAYS.map((day, dayIndex) => (
-                <div key={day} className="flex min-w-[140px] flex-1 flex-col border-r border-border last:border-r-0">
-                  <div className="flex h-16 flex-col items-center justify-center border-b border-border bg-muted/20 sticky top-0 z-30 backdrop-blur-md">
+                <div key={day} className={cn(
+                  "flex flex-col border-r border-border last:border-r-0",
+                  density === "comfortable" ? "min-w-[200px]" : "min-w-[140px]"
+                )}>
+                  <div className={cn(
+                    "flex flex-col items-center justify-center border-b border-border bg-muted/20 sticky top-0 z-30 backdrop-blur-md",
+                    density === "comfortable" ? "h-20" : "h-16"
+                  )}>
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{day.substring(0, 3)}</span>
-                    <span className="text-base font-black text-foreground">{fmtDayNumber(weekDates[dayIndex])}</span>
+                    <span className={cn("font-black text-foreground", density === "comfortable" ? "text-xl" : "text-base")}>{fmtDayNumber(weekDates[dayIndex])}</span>
                   </div>
 
                   {timeKeys.map((key) => {
-                    const items = slotsByDay.get(day)?.get(key) || [];
-                    const orderedGroups = groupByDepartment(items).sort((a, b) => {
-                      const spanDiff = getCapsuleColSpan(b.codes.length) - getCapsuleColSpan(a.codes.length);
-                      if (spanDiff !== 0) return spanDiff;
-                      return a.departmentCode.localeCompare(b.departmentCode);
-                    });
+                    const groups = slotsByDay.get(day)?.get(key) || [];
+                    const itemsExist = groups.length > 0;
 
                     return (
-                      <div 
-                        key={`${day}-${key}`} 
+                      <div
+                        key={`${day}-${key}`}
                         className={cn(
-                          "border-b border-border p-1.5 transition-colors relative",
-                          items.length === 0 ? "bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] opacity-40" : "hover:bg-muted/5"
-                        )} 
+                          "border-b border-border transition-colors relative",
+                          density === "comfortable"
+                            ? "p-3"
+                            : "p-1.5",
+                          !itemsExist 
+                            ? "bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] opacity-40" 
+                            : density === "comfortable"
+                              ? "bg-gradient-to-br from-muted/20 to-muted/30 hover:from-muted/40 hover:to-muted/50 transition-all"
+                              : "hover:bg-muted/5"
+                        )}
                         style={{ height: rowHeights[key] }}
                       >
-                        {items.length > 0 ? (
+                        {itemsExist ? (
                           <div
                             className="grid content-start h-full"
                             style={{
-                              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-                              gap: `${rowGap}px`,
-                              gridAutoRows: `minmax(${capsuleMinHeight}px, auto)`,
+                              gridTemplateColumns: density === "comfortable"
+                                ? "repeat(auto-fill, minmax(280px, 1fr))"  // Auto-fit cards with min 280px
+                                : "repeat(4, minmax(0, 1fr))",
+                              gap: density === "comfortable" 
+                                ? `${COMFORTABLE_SLOT_GAP}px` 
+                                : `${rowGap}px`,
+                              gridAutoRows: density === "comfortable"
+                                ? `minmax(${COMFORTABLE_SLOT_HEIGHT}px, auto)`
+                                : `minmax(${capsuleMinHeight}px, auto)`,
                               gridAutoFlow: "dense",
                             }}
                           >
-                            {orderedGroups.map((group) => {
+                            {groups.map((group) => {
                               const theme = getTheme(group.departmentName, group.departmentCode, group.codes[0]);
+                              const gradient = getComfortableCardGradient(group.departmentCode, group.codes[0]);
                               const span = getCapsuleColSpan(group.codes.length);
                               const isFocused = focusDept === "all" || group.departmentCode === focusDept;
+                              const adjustedSpan = density === "comfortable" ? Math.min(span, 2) : span;
 
+                              // Comfortable mode: Show detailed card with improved layout
+                              if (density === "comfortable") {
+                                const displayCodes = group.codes.slice(0, 2);
+                                const remainingCodes = group.codes.length - displayCodes.length;
+                                const teacherName = group.items[0]?.teacherName || "Unknown";
+                                const displayItems = group.items.slice(0, 2);
+                                const remainingItems = group.items.length - displayItems.length;
+
+                                return (
+                                  <Tooltip key={`${day}-${key}-${group.departmentCode}`}>
+                                    <TooltipTrigger asChild>
+                                      <div
+                                        className={cn(
+                                          "relative overflow-hidden cursor-pointer group",
+                                          comfortableCardClasses,
+                                          !isFocused ? "opacity-20 grayscale blur-sm" : ""
+                                        )}
+                                        style={{ gridColumn: `span ${adjustedSpan} / span ${adjustedSpan}` }}
+                                      >
+                                        {/* Gradient background */}
+                                        <div className={cn("absolute inset-0 bg-gradient-to-br", gradient, "opacity-95 group-hover:opacity-100 transition-opacity")} />
+                                        
+                                        {/* Content - Clean hierarchical layout */}
+                                        <div className="relative z-10 p-4 h-full flex flex-col text-white">
+                                          {/* Row 1: Subject codes + Time */}
+                                          <div className="flex items-center justify-between mb-3">
+                                            <div className="flex flex-wrap gap-1.5">
+                                              {displayCodes.map((code, idx) => (
+                                                <Badge
+                                                  key={idx}
+                                                  className="bg-white/25 text-white border-white/40 text-[10px] font-bold px-2.5 py-0.5 rounded-md backdrop-blur-sm"
+                                                >
+                                                  {code}
+                                                </Badge>
+                                              ))}
+                                              {remainingCodes > 0 && (
+                                                <Badge className="bg-white/20 text-white border-white/30 text-[9px] font-bold px-2 py-0.5">
+                                                  +{remainingCodes}
+                                                </Badge>
+                                              )}
+                                            </div>
+                                            <div className="flex items-center gap-1.5 bg-white/25 backdrop-blur-md px-2.5 py-1 rounded-full">
+                                              <Clock className="h-3 w-3" />
+                                              <span className="text-[10px] font-bold">{key.split("-")[0]}</span>
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Row 2: Department name (clean, single line) */}
+                                          <p className="text-[10px] font-bold uppercase tracking-wider opacity-90 mb-3 line-clamp-1">
+                                            {group.departmentName}
+                                          </p>
+                                          
+                                          {/* Row 3: Class details (max 2, with line clamp) */}
+                                          <div className="flex-1 space-y-2 mb-4">
+                                            {displayItems.map((item, idx) => (
+                                              <div key={idx} className="flex items-start gap-2">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-white/70 mt-1.5 flex-shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                  <p className="text-[11px] font-bold text-white leading-snug line-clamp-2">
+                                                    {item.className}
+                                                  </p>
+                                                  {item.subjectName && (
+                                                    <p className="text-[9px] text-white/80 leading-tight line-clamp-1 mt-0.5">
+                                                      {item.subjectName}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              </div>
+                                            ))}
+                                            {remainingItems > 0 && (
+                                              <div className="flex items-center gap-2 pl-3.5">
+                                                <div className="h-1.5 w-1.5 rounded-full bg-white/50 mt-1.5" />
+                                                <p className="text-[9px] text-white/70 font-medium">
+                                                  +{remainingItems} more session{remainingItems > 1 ? "s" : ""}
+                                                </p>
+                                              </div>
+                                            )}
+                                          </div>
+                                          
+                                          {/* Row 4: Teacher info with avatar */}
+                                          <div className="flex items-center gap-2.5 pt-3 border-t border-white/25">
+                                            <div className="h-8 w-8 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-sm">
+                                              <span className="text-[10px] font-bold">{getTeacherInitials(teacherName)}</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-[10px] font-bold text-white line-clamp-1">
+                                                {teacherName}
+                                              </p>
+                                              <p className="text-[8px] text-white/70 font-medium">
+                                                {group.items.length} session{group.items.length > 1 ? "s" : ""}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent className="w-72 rounded-xl border border-border/50 bg-card p-4 shadow-2xl backdrop-blur-xl z-[100]">
+                                      <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
+                                            {group.departmentCode}
+                                          </Badge>
+                                          <div className="flex items-center gap-1.5 text-muted-foreground">
+                                            <Clock className="h-3 w-3" />
+                                            <span className="text-[10px] font-bold uppercase tracking-wider">{key.replace("-", " - ")}</span>
+                                          </div>
+                                        </div>
+                                        <div>
+                                          <p className="text-sm font-bold tracking-tight text-foreground">{group.departmentName}</p>
+                                          <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
+                                            {group.items.length} active session{group.items.length > 1 ? "s" : ""}
+                                          </p>
+                                        </div>
+                                        <div className="pt-3 border-t border-border/50 space-y-3">
+                                          {group.items.map((item, idx) => (
+                                            <div key={idx} className="flex flex-col">
+                                              <div className="flex items-center gap-2 mb-1">
+                                                <Badge variant="secondary" className="text-[9px] font-bold">{item.subjectCode}</Badge>
+                                                <span className="text-[10px] font-bold text-foreground">{item.className}</span>
+                                              </div>
+                                              <div className="flex items-center gap-1.5 ml-1">
+                                                <User className="h-3 w-3 text-muted-foreground" />
+                                                <span className="text-[9px] font-medium text-muted-foreground">{item.teacherName}</span>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                );
+                              }
+
+                              // Compact mode: Show simple capsule (existing implementation)
                               return (
                                 <Tooltip key={`${day}-${key}-${group.departmentCode}`}>
                                   <TooltipTrigger asChild>
@@ -567,7 +1083,7 @@ export function WeeklyScheduleDensity() {
                                         theme,
                                         !isFocused ? "opacity-15 grayscale-[0.9] scale-[0.95] blur-[1px] border-border" : "hover:scale-105 hover:shadow-xl hover:z-20 hover:-translate-y-0.5"
                                       )}
-                                      style={{ gridColumn: `span ${span} / span ${span}` }}
+                                      style={{ gridColumn: `span ${adjustedSpan} / span ${adjustedSpan}` }}
                                     >
                                       <div className="whitespace-normal break-words leading-tight">{group.codes.join(" · ")}</div>
                                     </div>
@@ -589,7 +1105,7 @@ export function WeeklyScheduleDensity() {
                                           {group.items.length} active session{group.items.length > 1 ? "s" : ""}
                                         </p>
                                       </div>
-                                      
+
                                       <div className="pt-2 border-t border-border/50">
                                         {group.items.slice(0, 3).map((item, idx) => (
                                           <div key={idx} className="flex flex-col mb-2 last:mb-0">
@@ -618,8 +1134,9 @@ export function WeeklyScheduleDensity() {
               ))}
             </div>
           </div>
+          )}
         </div>
       </section>
     </TooltipProvider>
   );
-}
+});

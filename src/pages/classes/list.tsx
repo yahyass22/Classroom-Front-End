@@ -80,6 +80,7 @@ const ClassesList = () => {
                         src={getValue<string>() || '/placeholder-class.png'}
                         alt="Class Banner"
                         className="w-10 h-10 rounded object-cover"
+                        loading="lazy"
                     />
                 </div>
             )

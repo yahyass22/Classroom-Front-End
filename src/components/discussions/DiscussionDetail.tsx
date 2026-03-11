@@ -28,6 +28,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useParams, useNavigate } from "react-router";
+import { useCacheInvalidation } from "@/hooks/useCacheInvalidation";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -121,6 +122,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
   const resolvedClassId = classId || params.id as string;
   const { data: session } = useSession();
   const queryClient = useQueryClient();
+  const { invalidateDiscussions, invalidateDashboard } = useCacheInvalidation();
   const [replyContent, setReplyContent] = useState('');
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -136,6 +138,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       const response = await apiClient.get<{ data: DiscussionDetail }>(endpoint);
       return response.data;
     },
+    staleTime: 30 * 1000, // 30 seconds - discussions can change frequently
   });
 
   const createReplyMutation = useMutation({
@@ -146,7 +149,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussions();
+      invalidateDashboard();
       setReplyContent('');
       setReplyingTo(null);
       toast.success('Reply posted successfully');
@@ -163,7 +167,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussions();
       setEditingId(null);
       toast.success('Reply updated successfully');
     },
@@ -179,6 +183,7 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       });
     },
     onSuccess: () => {
+      // Don't invalidate on vote - too frequent, let it ride on stale time
       queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
     },
     onError: (error: Error) => {
@@ -191,7 +196,8 @@ export function DiscussionDetail({ discussionId, classId }: DiscussionDetailProp
       await apiClient.post(`/discussions/${discussionId}/replies/${replyId}/accept`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['discussion', discussionId] });
+      invalidateDiscussions();
+      invalidateDashboard();
       toast.success('Answer status updated');
     },
     onError: (error: Error) => {
