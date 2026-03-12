@@ -51,44 +51,74 @@ interface DepartmentGroup {
 
 const DEPT_MAP: Record<string, string> = {
   "COMPUTER SCIENCE": "bg-sky-400 text-white border-sky-500 dark:bg-sky-500",
-  "CS": "bg-sky-400 text-white border-sky-500 dark:bg-sky-500",
   "MATHEMATICS": "bg-indigo-400 text-white border-indigo-500 dark:bg-indigo-500",
-  "MATH": "bg-indigo-400 text-white border-indigo-500 dark:bg-indigo-500",
   "PHYSICS": "bg-purple-400 text-white border-purple-500 dark:bg-purple-500",
-  "PHYS": "bg-purple-400 text-white border-purple-500 dark:bg-purple-500",
   "CHEMISTRY": "bg-pink-400 text-white border-pink-500 dark:bg-pink-500",
-  "CHEM": "bg-pink-400 text-white border-pink-500 dark:bg-pink-500",
   "BIOLOGY": "bg-green-400 text-white border-green-500 dark:bg-green-500",
-  "BIO": "bg-green-400 text-white border-green-500 dark:bg-green-500",
   "ENGLISH": "bg-rose-400 text-white border-rose-500 dark:bg-rose-500",
-  "ENG": "bg-rose-400 text-white border-rose-500 dark:bg-rose-500",
   "HISTORY": "bg-orange-400 text-white border-orange-500 dark:bg-orange-500",
-  "HIST": "bg-orange-400 text-white border-orange-500 dark:bg-orange-500",
   "GEOGRAPHY": "bg-teal-400 text-white border-teal-500 dark:bg-teal-500",
-  "GEOG": "bg-teal-400 text-white border-teal-500 dark:bg-teal-500",
   "ECONOMICS": "bg-yellow-400 text-yellow-950 border-yellow-500 dark:bg-yellow-500 dark:text-yellow-50",
-  "ECON": "bg-yellow-400 text-yellow-950 border-yellow-500 dark:bg-yellow-500 dark:text-yellow-50",
-  "BUSINESS ADMINISTRATION": "bg-slate-400 text-white border-slate-500 dark:bg-slate-500",
-  "BUSINESS ADMIN": "bg-slate-400 text-white border-slate-500 dark:bg-slate-500",
-  "ENGINEERING": "bg-blue-400 text-white border-blue-500 dark:bg-blue-500",
-  "ENGR": "bg-blue-400 text-white border-blue-500 dark:bg-blue-500",
+  "BUSINESS": "bg-emerald-500 text-white border-emerald-600 dark:bg-emerald-600",
+  "ENGINEERING": "bg-blue-500 text-white border-blue-600 dark:bg-blue-600",
   "PSYCHOLOGY": "bg-violet-400 text-white border-violet-500 dark:bg-violet-500",
-  "PSY": "bg-violet-400 text-white border-violet-500 dark:bg-violet-500",
   "SOCIOLOGY": "bg-fuchsia-400 text-white border-fuchsia-500 dark:bg-fuchsia-500",
-  "SOC": "bg-fuchsia-400 text-white border-fuchsia-500 dark:bg-fuchsia-500",
   "POLITICAL SCIENCE": "bg-red-400 text-white border-red-500 dark:bg-red-500",
-  "POLS": "bg-red-400 text-white border-red-500 dark:bg-red-500",
   "PHILOSOPHY": "bg-lime-400 text-lime-950 border-lime-500 dark:bg-lime-500 dark:text-lime-50",
-  "PHIL": "bg-lime-400 text-lime-950 border-lime-500 dark:bg-lime-500 dark:text-lime-50",
   "EDUCATION": "bg-cyan-400 text-cyan-950 border-cyan-500 dark:bg-cyan-500 dark:text-cyan-50",
-  "EDUC": "bg-cyan-400 text-cyan-950 border-cyan-500 dark:bg-cyan-500 dark:text-cyan-50",
   "FINE ARTS": "bg-red-300 text-red-950 border-red-400 dark:bg-red-400 dark:text-red-50",
-  "ART": "bg-red-300 text-red-950 border-red-400 dark:bg-red-400 dark:text-red-50",
   "MUSIC": "bg-rose-300 text-rose-950 border-rose-400 dark:bg-rose-400 dark:text-rose-50",
-  "MUS": "bg-rose-300 text-rose-950 border-rose-400 dark:bg-rose-400 dark:text-rose-50",
   "PHYSICAL EDUCATION": "bg-amber-400 text-amber-950 border-amber-500 dark:bg-amber-500 dark:text-amber-50",
-  "PE": "bg-amber-400 text-amber-950 border-amber-500 dark:bg-amber-500 dark:text-amber-50",
   "LAW": "bg-white text-slate-950 border-slate-200 dark:bg-slate-100 dark:text-slate-950",
+};
+
+const DEPT_CONSOLIDATION: Record<string, string> = {
+  // Engineering Faculty
+  "ENGINEERING": "ENGINEERING",
+  "ENGR": "ENGINEERING",
+  "CIVIL ENGINEERING": "ENGINEERING",
+  "CE": "ENGINEERING",
+  "ELECTRICAL ENGINEERING": "ENGINEERING",
+  "EE": "ENGINEERING",
+  "MECHANICAL ENGINEERING": "ENGINEERING",
+  "ME": "ENGINEERING",
+  
+  // Business Faculty
+  "BUSINESS": "BUSINESS",
+  "BUS": "BUSINESS",
+  "BUSINESS ADMINISTRATION": "BUSINESS",
+  "BUSINESS ADMIN": "BUSINESS",
+  
+  // CS & Math
+  "COMPUTER SCIENCE": "COMPUTER SCIENCE",
+  "CS": "COMPUTER SCIENCE",
+  "MATHEMATICS": "MATHEMATICS",
+  "MATH": "MATHEMATICS",
+  
+  // Sciences
+  "PHYSICS": "PHYSICS", "PHYS": "PHYSICS",
+  "CHEMISTRY": "CHEMISTRY", "CHEM": "CHEMISTRY",
+  "BIOLOGY": "BIOLOGY", "BIO": "BIOLOGY",
+  
+  // Humanities & Arts
+  "ENGLISH": "ENGLISH", "ENG": "ENGLISH",
+  "HISTORY": "HISTORY", "HIST": "HISTORY",
+  "GEOGRAPHY": "GEOGRAPHY", "GEOG": "GEOGRAPHY",
+  "ECONOMICS": "ECONOMICS", "ECON": "ECONOMICS",
+  "PSYCHOLOGY": "PSYCHOLOGY", "PSY": "PSYCHOLOGY",
+  "SOCIOLOGY": "SOCIOLOGY", "SOC": "SOCIOLOGY",
+  "POLITICAL SCIENCE": "POLITICAL SCIENCE", "POLS": "POLITICAL SCIENCE",
+  "PHILOSOPHY": "PHILOSOPHY", "PHIL": "PHILOSOPHY",
+  "EDUCATION": "EDUCATION", "EDUC": "EDUCATION",
+  "FINE ARTS": "FINE ARTS", "ART": "FINE ARTS",
+  "MUSIC": "MUSIC", "MUS": "MUSIC",
+  "PHYSICAL EDUCATION": "PHYSICAL EDUCATION", "PE": "PHYSICAL EDUCATION",
+};
+
+const getCanonicalDept = (code: string | null | undefined) => {
+  if (!code) return "OTHER";
+  const upper = code.toUpperCase().trim();
+  return DEPT_CONSOLIDATION[upper] || upper;
 };
 
 const toMinutes = (time: string) => {
@@ -146,66 +176,24 @@ const fmtDribbbleRange = (weekStart: Date) => {
 };
 
 const getTheme = (departmentName?: string | null, departmentCode?: string | null, subjectCode?: string) => {
-  const name = (departmentName || "").toUpperCase().trim();
-  const code = (departmentCode || "").toUpperCase().trim();
-  const fallback = (subjectCode || "").replace(/[0-9]/g, "").toUpperCase().trim();
-
-  const themeClasses = DEPT_MAP[name] || DEPT_MAP[code] || DEPT_MAP[fallback];
+  const canonicalName = getCanonicalDept(departmentName || departmentCode || (subjectCode || "").replace(/[0-9]/g, ""));
+  const themeClasses = DEPT_MAP[canonicalName];
 
   if (themeClasses) {
-    return cn("shadow-sm hover:brightness-110 transition-all duration-200", themeClasses);
+    return themeClasses;
   }
 
   return "bg-slate-200 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700";
 };
 
-// Get gradient background for comfortable mode cards
-const getComfortableCardGradient = (departmentCode?: string | null, subjectCode?: string) => {
-  const code = (departmentCode || "").toUpperCase().trim();
-  
-  const gradients: Record<string, string> = {
-    "COMPUTER SCIENCE": "from-sky-500 to-sky-600",
-    "CS": "from-sky-500 to-sky-600",
-    "MATHEMATICS": "from-indigo-500 to-indigo-600",
-    "MATH": "from-indigo-500 to-indigo-600",
-    "PHYSICS": "from-purple-500 to-purple-600",
-    "PHYS": "from-purple-500 to-purple-600",
-    "CHEMISTRY": "from-pink-500 to-pink-600",
-    "CHEM": "from-pink-500 to-pink-600",
-    "BIOLOGY": "from-green-500 to-green-600",
-    "BIO": "from-green-500 to-green-600",
-    "ENGLISH": "from-rose-500 to-rose-600",
-    "ENG": "from-rose-500 to-rose-600",
-    "HISTORY": "from-orange-500 to-orange-600",
-    "HIST": "from-orange-500 to-orange-600",
-    "GEOGRAPHY": "from-teal-500 to-teal-600",
-    "GEOG": "from-teal-500 to-teal-600",
-    "ECONOMICS": "from-yellow-500 to-yellow-600",
-    "ECON": "from-yellow-500 to-yellow-600",
-    "BUSINESS ADMINISTRATION": "from-slate-500 to-slate-600",
-    "BUSINESS ADMIN": "from-slate-500 to-slate-600",
-    "ENGINEERING": "from-blue-500 to-blue-600",
-    "ENGR": "from-blue-500 to-blue-600",
-    "PSYCHOLOGY": "from-violet-500 to-violet-600",
-    "PSY": "from-violet-500 to-violet-600",
-    "SOCIOLOGY": "from-fuchsia-500 to-fuchsia-600",
-    "SOC": "from-fuchsia-500 to-fuchsia-600",
-    "POLITICAL SCIENCE": "from-red-500 to-red-600",
-    "POLS": "from-red-500 to-red-600",
-    "PHILOSOPHY": "from-lime-500 to-lime-600",
-    "PHIL": "from-lime-500 to-lime-600",
-    "EDUCATION": "from-cyan-500 to-cyan-600",
-    "EDUC": "from-cyan-500 to-cyan-600",
-    "FINE ARTS": "from-red-400 to-red-500",
-    "ART": "from-red-400 to-red-500",
-    "MUSIC": "from-rose-400 to-rose-500",
-    "MUS": "from-rose-400 to-rose-500",
-    "PHYSICAL EDUCATION": "from-amber-400 to-amber-500",
-    "PE": "from-amber-400 to-amber-500",
-    "LAW": "from-slate-400 to-slate-500",
-  };
+// Simplified helper to get only the background color class for specific use cases
+const getBgColorOnly = (themeClasses: string) => {
+  return themeClasses.split(" ").find(c => c.startsWith("bg-")) || "bg-slate-400";
+};
 
-  return gradients[code] || gradients[(subjectCode || "").replace(/[0-9]/g, "").toUpperCase()] || "from-slate-400 to-slate-500";
+// Helper to get text color class from theme string
+const getTextColorOnly = (themeClasses: string) => {
+  return themeClasses.split(" ").find(c => c.startsWith("text-")) || "text-white";
 };
 
 const getCapsuleColSpan = (codesCount: number) => {
@@ -242,17 +230,21 @@ const getDayTimeGroups = (items: RoutineItem[]) => {
     const fallbackPrefix = item.subjectCode.replace(/[0-9]/g, "").toUpperCase();
     const departmentCode = (item.departmentCode || fallbackPrefix || "DEFAULT").toUpperCase();
     const departmentName = item.departmentName || departmentCode;
+    
+    // Consolidate sub-departments into canonical parent departments
+    const canonicalId = getCanonicalDept(departmentCode);
+    const canonicalName = getCanonicalDept(departmentName);
 
-    if (!groups.has(departmentCode)) {
-      groups.set(departmentCode, {
-        departmentCode,
-        departmentName,
+    if (!groups.has(canonicalId)) {
+      groups.set(canonicalId, {
+        departmentCode: canonicalId,
+        departmentName: canonicalName,
         items: [],
         codes: [],
       });
     }
 
-    const group = groups.get(departmentCode)!;
+    const group = groups.get(canonicalId)!;
     group.items.push(item);
     if (!group.codes.includes(item.subjectCode)) {
       group.codes.push(item.subjectCode);
@@ -299,7 +291,7 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
   // Comfortable mode specific classes
   const isComfortable = density === "comfortable";
   const comfortableCardClasses = isComfortable
-    ? "rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+    ? "rounded-2xl overflow-hidden shadow-[0_4px_16px_-2px_rgba(0,0,0,0.1)] hover:shadow-[0_12px_40px_-8px_rgba(0,0,0,0.2)] transition-all duration-300 hover:-translate-y-1"
     : "rounded-xl";
 
   // Helper to get teacher initials
@@ -338,7 +330,9 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
     const depts = new Set<string>();
     routineData.forEach(item => {
       const code = (item.departmentCode || item.subjectCode.replace(/[0-9]/g, "")).toUpperCase();
-      if (code) depts.add(code);
+      // Consolidate to parent department for the filter list
+      const canonical = getCanonicalDept(code);
+      if (canonical) depts.add(canonical);
     });
     return Array.from(depts).sort();
   }, [routineData]);
@@ -483,8 +477,9 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
 
   return (
     <TooltipProvider>
-      <section className="space-y-6">
-        <div className="bg-card/40 backdrop-blur-xl p-5 rounded-[2rem] border border-border shadow-md space-y-6">
+      <div className="bg-card/30 backdrop-blur-xl rounded-[2.5rem] border border-border/80 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.1)] overflow-hidden">
+        {/* Navigation & Controls Section */}
+        <div className="p-4 md:p-6 pb-2 space-y-6">
           <div className="flex flex-col xl:flex-row gap-6 items-start xl:items-center justify-between">
             <div className="flex items-center gap-4 bg-background/50 p-1.5 rounded-2xl border border-border shadow-inner group">
               <Button
@@ -581,8 +576,8 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
                 Full Overview
               </Button>
               {allDepts.map(dept => {
-                const themeClasses = DEPT_MAP[dept] || "bg-slate-400 text-white";
-                const colorBase = themeClasses.split(" ")[0].replace("bg-", "");
+                const themeClasses = getTheme(null, dept, null);
+                const colorBase = themeClasses.split(" ").find(c => c.startsWith("bg-"))?.replace("bg-", "") || "slate-400";
 
                 return (
                   <Button
@@ -608,7 +603,8 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
           </div>
         </div>
 
-        <div className="rounded-2xl bg-card/30 backdrop-blur-sm shadow-sm overflow-hidden relative">
+        {/* Content Section with Relative Positioning for Live Pulse */}
+        <div className="relative border-t border-border/60">
           {livePulsePosition && (
             <div
               className="absolute left-0 right-0 h-px bg-rose-500 z-30 pointer-events-none flex items-center"
@@ -619,61 +615,69 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
           )}
 
           {isComfortable ? (
-            <div className="p-5 lg:p-6">
-              <div className="grid gap-6 xl:grid-cols-[140px_1fr]">
-                {/* Minimal Day Info Card */}
-                <div className="rounded-2xl bg-background/50 p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-[8px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">Day</p>
-                      <h3 className="mt-0.5 text-lg font-black tracking-tight text-foreground">{selectedDayLabel}</h3>
-                    </div>
-                  </div>
-                  <div className="mt-2 flex items-baseline gap-1.5">
-                    <span className="text-3xl font-black tracking-tight">{fmtDayNumber(selectedDate)}</span>
-                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{selectedMonth}</span>
-                  </div>
-                  <div className="mt-3 flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
-                    <Clock className="h-3 w-3" />
-                    <span>{START_HOUR}:00 - {END_HOUR}:00</span>
-                  </div>
-                </div>
-
+            <div className="p-4 md:p-6 lg:p-8">
+              <div className="flex flex-col gap-6">
                 {/* Main Schedule Area */}
-                <div className="rounded-[2rem] bg-background/40 p-0">
-                  {/* Minimal Day Selector - No borders, clean */}
-                  <div className="flex items-center gap-1.5 pb-0">
-                    {DAYS.map((day, idx) => {
-                      const isActive = day === selectedDay;
-                      return (
-                        <Button
-                          key={day}
-                          variant="ghost"
-                          size="sm"
-                          className={cn(
-                            "h-9 rounded-xl text-[9px] font-black uppercase px-3 transition-all duration-200 border-0",
-                            isActive 
-                              ? "bg-foreground text-background shadow-lg scale-105" 
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          )}
-                          onClick={() => setSelectedDay(day)}
-                        >
-                          {day.substring(0, 3)}
-                        </Button>
-                      );
-                    })}
+                <div className="rounded-[2.5rem] bg-background/20 p-1">
+                  {/* Consolidated Header: [Monday, 9 MAR] + Pill Selector */}
+                  <div className="flex flex-col md:flex-row items-center justify-between gap-6 p-4 border-b border-border/10 mb-2">
+                    <div className="flex items-baseline gap-3 shrink-0">
+                      <h3 className="text-2xl font-black tracking-tight text-foreground leading-none">{selectedDayLabel}</h3>
+                      <div className="flex items-baseline gap-1.5 px-3 py-1 rounded-xl bg-primary/10 border border-primary/20">
+                        <span className="text-xl font-black tracking-tighter text-primary">{fmtDayNumber(selectedDate)}</span>
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/70">{selectedMonth}</span>
+                      </div>
+                      <Badge variant="outline" className="ml-2 h-7 px-3 rounded-lg border-border/50 bg-background/50 text-[10px] font-black uppercase tracking-widest text-muted-foreground shadow-sm">
+                        {comfortableGrid.total} Sessions
+                      </Badge>
+                    </div>
+
+                    {/* Day Selector Pills */}
+                    <div className="flex items-center gap-2 p-2 bg-muted/20 rounded-[1.5rem] border border-border/40 overflow-x-auto no-scrollbar">
+                      {DAYS.map((day, idx) => {
+                        const isActive = day === selectedDay;
+                        const date = weekDates[idx];
+                        const isToday = isSameDay(date, new Date());
+                        
+                        return (
+                          <Button
+                            key={day}
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "h-14 min-w-[70px] flex-col rounded-[1.1rem] transition-all duration-300 relative px-4 gap-0.5",
+                              isActive 
+                                ? "bg-foreground text-background shadow-xl scale-105 z-10" 
+                                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                            )}
+                            onClick={() => setSelectedDay(day)}
+                          >
+                            <span className="text-[9px] font-black uppercase tracking-widest opacity-60 leading-none">{day.substring(0, 3)}</span>
+                            <span className="text-lg font-black leading-none">{fmtDayNumber(date)}</span>
+                            {isToday && (
+                              <span className={cn(
+                                "absolute -top-1 px-1.5 py-0.5 rounded-full text-[7px] font-black uppercase tracking-tighter",
+                                isActive ? "bg-primary text-white" : "bg-primary/20 text-primary"
+                              )}>
+                                Today
+                              </span>
+                            )}
+                          </Button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {comfortableGrid.sortedTimeKeys.length === 0 ? (
-                    <div className="py-20 text-center">
-                      <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted/30">
-                        <Clock className="h-8 w-8 text-muted-foreground/50" />
+                    <div className="py-24 text-center">
+                      <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-muted/20">
+                        <Clock className="h-10 w-10 text-muted-foreground/30" />
                       </div>
-                      <p className="text-base font-bold text-foreground">No sessions scheduled</p>
-                      <p className="text-sm text-muted-foreground mt-1">Enjoy your free time!</p>
+                      <p className="text-xl font-black text-foreground tracking-tight">Quiet day ahead</p>
+                      <p className="text-sm text-muted-foreground mt-2 max-w-[200px] mx-auto font-medium">No sessions scheduled for this day in your department.</p>
                     </div>
                   ) : (
-                    <div className="pt-4 space-y-4">
+                    <div className="p-4 space-y-8">
                       {comfortableGrid.sortedTimeKeys.map((key) => {
                         const [start, end] = key.split("-");
                         const groups = comfortableGrid.slots.get(key) || [];
@@ -686,24 +690,27 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
                           })();
 
                         return (
-                          <div key={key} className="rounded-[1.5rem] bg-muted/15 p-3 md:p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2.5">
-                                <div className={cn(
-                                  "h-2.5 w-2.5 rounded-full",
-                                  isLive ? "bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.45)]" : "bg-muted-foreground/30"
-                                )} />
-                                <div className="flex items-baseline gap-2">
-                                  <span className={cn("text-base font-black tracking-tight", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</span>
-                                  <span className="text-[11px] font-bold text-muted-foreground">to {end}</span>
-                                </div>
+                          <div key={key} className="relative">
+                            <div className="flex items-center gap-4 mb-5">
+                              <div className={cn(
+                                "flex items-center justify-center px-5 py-2 rounded-full border shadow-sm transition-all",
+                                isLive 
+                                  ? "bg-rose-500 border-rose-600 text-white shadow-rose-200 dark:shadow-rose-950/20" 
+                                  : "bg-background border-border text-muted-foreground"
+                              )}>
+                                <span className="text-sm font-black tabular-nums tracking-tight">{start} — {end}</span>
+                                {isLive && <span className="ml-2.5 h-1.5 w-1.5 rounded-full bg-white animate-pulse" />}
                               </div>
+                              <div className="flex-1 h-px bg-gradient-to-r from-border/60 to-transparent" />
                             </div>
 
-                            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-5">
                               {groups.map((group) => {
-                                const gradient = getComfortableCardGradient(group.departmentCode, group.codes[0]);
+                                const themeClasses = getTheme(group.departmentName, group.departmentCode, group.codes[0]);
+                                const bgColor = getBgColorOnly(themeClasses);
+                                const textColor = getTextColorOnly(themeClasses);
                                 const isFocused = focusDept === "all" || group.departmentCode === focusDept;
+                                
                                 const displayCodes = group.codes.slice(0, 2);
                                 const remainingCodes = group.codes.length - displayCodes.length;
                                 const teacherName = group.items[0]?.teacherName || "Unknown";
@@ -715,112 +722,104 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
                                     <TooltipTrigger asChild>
                                       <div
                                         className={cn(
-                                          "relative overflow-hidden cursor-pointer group",
+                                          "group relative h-full flex flex-col",
                                           comfortableCardClasses,
-                                          !isFocused ? "opacity-20 grayscale blur-sm" : ""
+                                          !isFocused ? "opacity-20 grayscale blur-sm" : "hover:ring-4 hover:ring-primary/10"
                                         )}
                                       >
-                                        <div className={cn("absolute inset-0 bg-gradient-to-br", gradient, "opacity-95 group-hover:opacity-100 transition-opacity")} />
-                                        <div className="relative z-10 p-4 h-full flex flex-col text-white">
-                                          {/* Row 1: Subject codes + Time */}
-                                          <div className="flex items-center justify-between mb-3">
-                                            <div className="flex flex-wrap gap-1.5">
-                                              {displayCodes.map((code, idx) => (
-                                                <Badge
-                                                  key={idx}
-                                                  className="bg-white/25 text-white border-white/40 text-[10px] font-bold px-2.5 py-0.5 rounded-md backdrop-blur-sm"
-                                                >
-                                                  {code}
-                                                </Badge>
-                                              ))}
-                                              {remainingCodes > 0 && (
-                                                <Badge className="bg-white/20 text-white border-white/30 text-[9px] font-bold px-2 py-0.5">
-                                                  +{remainingCodes}
-                                                </Badge>
-                                              )}
+                                        {/* Dynamic Theme Background with subtle gradient overlay */}
+                                        <div className={cn("absolute inset-0 transition-all duration-500", bgColor, "opacity-95 group-hover:opacity-100")} />
+                                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent pointer-events-none" />
+                                        
+                                        <div className={cn("relative z-10 p-5 h-full flex flex-col", textColor)}>
+                                          {/* Header: Department Identity - High Visibility */}
+                                          <div className="flex items-center justify-between gap-2 mb-4">
+                                            <div className="flex items-center gap-2">
+                                              <div className="h-5 w-1 rounded-full bg-current opacity-50" />
+                                              <span className="text-[10px] font-black uppercase tracking-[0.2em] leading-none">
+                                                {group.departmentName}
+                                              </span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 bg-white/25 backdrop-blur-md px-2.5 py-1 rounded-full">
-                                              <Clock className="h-3 w-3" />
-                                              <span className="text-[10px] font-bold">{start}</span>
+                                            <div className="px-2 py-0.5 rounded-md bg-black/10 dark:bg-white/20 border border-current/20 text-[8px] font-black uppercase tracking-widest shrink-0 shadow-sm">
+                                              {group.departmentCode}
                                             </div>
                                           </div>
-                                          
-                                          {/* Row 2: Department name */}
-                                          <p className="text-[10px] font-bold uppercase tracking-wider opacity-90 mb-3 line-clamp-1">
-                                            {group.departmentName}
-                                          </p>
-                                          
-                                          {/* Row 3: Class details */}
-                                          <div className="flex-1 space-y-2 mb-4">
-                                            {displayItems.map((item, idx) => (
-                                              <div key={idx} className="flex items-start gap-2">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-white/70 mt-1.5 flex-shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                  <p className="text-[11px] font-bold text-white leading-snug line-clamp-2">
+
+                                          {/* Subject Codes - Full wrap visibility */}
+                                          <div className="flex flex-wrap items-center gap-1.5 mb-5 pb-3 border-b border-current/10">
+                                            {group.codes.map((code, idx) => (
+                                              <span key={idx} className="text-[9px] font-black uppercase tracking-tighter opacity-70">
+                                                {code}{idx < group.codes.length - 1 ? " ·" : ""}
+                                              </span>
+                                            ))}
+                                          </div>
+
+                                          {/* Body: ALL Sessions - No Truncation */}
+                                          <div className="flex-1 space-y-4 pr-1 scrollbar-hide overflow-y-auto">
+                                            {group.items.map((item, idx) => (
+                                              <div key={idx} className="space-y-1.5 group/item">
+                                                <div className="flex items-start gap-2">
+                                                  <div className="h-1.5 w-1.5 rounded-full bg-current opacity-40 mt-1.5 shrink-0" />
+                                                  <p className="text-[13px] font-extrabold leading-[1.3] tracking-tight group-hover:underline decoration-1 underline-offset-4 transition-all">
                                                     {item.className}
                                                   </p>
-                                                  {item.subjectName && (
-                                                    <p className="text-[9px] text-white/80 leading-tight line-clamp-1 mt-0.5">
-                                                      {item.subjectName}
-                                                    </p>
-                                                  )}
                                                 </div>
+                                                {item.subjectName && (
+                                                  <p className="text-[10px] font-medium opacity-70 ml-3.5 italic tracking-tight line-clamp-1">
+                                                    {item.subjectName}
+                                                  </p>
+                                                )}
                                               </div>
                                             ))}
-                                            {remainingItems > 0 && (
-                                              <div className="flex items-center gap-2 pl-3.5">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-white/50 mt-1.5" />
-                                                <p className="text-[9px] text-white/70 font-medium">
-                                                  +{remainingItems} more session{remainingItems > 1 ? "s" : ""}
-                                                </p>
-                                              </div>
-                                            )}
                                           </div>
-                                          
-                                          {/* Row 4: Teacher info with avatar */}
-                                          <div className="flex items-center gap-2.5 pt-3 border-t border-white/25">
-                                            <div className="h-8 w-8 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-sm">
-                                              <span className="text-[10px] font-bold">{getTeacherInitials(teacherName)}</span>
+
+                                          {/* Footer: Professor Info */}
+                                          <div className="mt-6 pt-4 border-t border-current/20 flex items-center gap-3">
+                                            <div className="h-9 w-9 rounded-[0.8rem] bg-current/10 backdrop-blur-xl border border-current/20 flex items-center justify-center flex-shrink-0 shadow-sm transition-transform group-hover:scale-110">
+                                              <span className="text-[10px] font-black tracking-tighter">{getTeacherInitials(teacherName)}</span>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-[10px] font-bold text-white line-clamp-1">
+                                            <div className="min-w-0 flex-1">
+                                              <p className="text-[11px] font-black truncate leading-none mb-1.5 tracking-tight">
                                                 {teacherName}
                                               </p>
-                                              <p className="text-[8px] text-white/70 font-medium">
-                                                {group.items.length} session{group.items.length > 1 ? "s" : ""}
+                                              <p className="text-[8px] font-bold uppercase tracking-tighter opacity-60 flex items-center gap-1.5">
+                                                <span className="h-1 w-1 rounded-full bg-current animate-pulse" />
+                                                {group.items.length} Total Sessions
                                               </p>
                                             </div>
                                           </div>
                                         </div>
                                       </div>
                                     </TooltipTrigger>
-                                    <TooltipContent className="w-72 rounded-xl border border-border/50 bg-card p-4 shadow-2xl backdrop-blur-xl z-[100]">
-                                      <div className="space-y-4">
+                                    <TooltipContent className="w-80 rounded-[1.5rem] border border-border/50 bg-card p-5 shadow-2xl backdrop-blur-xl z-[100]">
+                                      <div className="space-y-5">
                                         <div className="flex items-center justify-between">
-                                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
+                                          <Badge variant="secondary" className="text-[10px] font-black uppercase tracking-[0.2em] px-3">
                                             {group.departmentCode}
                                           </Badge>
-                                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                                            <Clock className="h-3 w-3" />
-                                            <span className="text-[10px] font-bold uppercase tracking-wider">{key.replace("-", " - ")}</span>
+                                          <div className="flex items-center gap-2 text-muted-foreground">
+                                            <Clock className="h-4 w-4" />
+                                            <span className="text-xs font-black tabular-nums">{key.replace("-", " - ")}</span>
                                           </div>
                                         </div>
                                         <div>
-                                          <p className="text-sm font-bold tracking-tight text-foreground">{group.departmentName}</p>
-                                          <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
-                                            {group.items.length} active session{group.items.length > 1 ? "s" : ""}
+                                          <p className="text-base font-black tracking-tight text-foreground leading-tight">{group.departmentName}</p>
+                                          <p className="text-[11px] font-bold text-muted-foreground mt-1">
+                                            {group.items.length} sessions listed for this time block
                                           </p>
                                         </div>
-                                        <div className="pt-3 border-t border-border/50 space-y-3">
+                                        <div className="space-y-4 pt-4 border-t border-border/40">
                                           {group.items.map((item, idx) => (
-                                            <div key={idx} className="flex flex-col">
-                                              <div className="flex items-center gap-2 mb-1">
-                                                <Badge variant="secondary" className="text-[9px] font-bold">{item.subjectCode}</Badge>
-                                                <span className="text-[10px] font-bold text-foreground">{item.className}</span>
-                                              </div>
-                                              <div className="flex items-center gap-1.5 ml-1">
-                                                <User className="h-3 w-3 text-muted-foreground" />
-                                                <span className="text-[9px] font-medium text-muted-foreground">{item.teacherName}</span>
+                                            <div key={idx} className="group/item">
+                                              <div className="flex items-start gap-3">
+                                                <Badge variant="outline" className="h-5 px-1.5 text-[9px] font-black border-primary/30 text-primary shrink-0 mt-0.5">{item.subjectCode}</Badge>
+                                                <div className="min-w-0">
+                                                  <p className="text-xs font-black text-foreground group-hover/item:text-primary transition-colors">{item.className}</p>
+                                                  <div className="flex items-center gap-2 mt-1.5 text-muted-foreground">
+                                                    <User className="h-3 w-3" />
+                                                    <span className="text-[10px] font-bold">{item.teacherName}</span>
+                                                  </div>
+                                                </div>
                                               </div>
                                             </div>
                                           ))}
@@ -841,15 +840,9 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
             </div>
           ) : (
             <div className="flex overflow-x-auto no-scrollbar">
-            <div className={cn(
-              "shrink-0 border-r border-border bg-muted/30 relative z-40",
-              density === "comfortable" ? "w-24" : "w-20"
-            )}>
-              <div className={cn(
-                "border-b border-border sticky top-0 bg-muted/40 backdrop-blur-md z-50 flex items-center justify-center",
-                density === "comfortable" ? "h-20" : "h-16"
-              )}>
-                 <Clock className={cn("text-muted-foreground", density === "comfortable" ? "h-5 w-5" : "h-4 w-4")} />
+            <div className="shrink-0 border-r border-border bg-muted/30 relative z-40 w-20">
+              <div className="border-b border-border sticky top-0 bg-muted/40 backdrop-blur-md z-50 flex items-center justify-center h-16">
+                 <Clock className="text-muted-foreground h-4 w-4" />
               </div>
               {timeKeys.map((key) => {
                 const [start, end] = key.split("-");
@@ -862,20 +855,10 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
                 return (
                   <div key={key} className={cn(
                     "relative flex flex-col justify-center border-b border-border px-3 transition-colors",
-                    density === "comfortable" ? "px-4" : "px-3",
                     isLive ? "bg-rose-500/10" : ""
                   )} style={{ height: rowHeights[key] }}>
-                    {density === "comfortable" ? (
-                      <>
-                        <div className={cn("text-[13px] font-black tracking-tighter", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</div>
-                        <div className="text-[10px] font-bold text-muted-foreground">to {end}</div>
-                      </>
-                    ) : (
-                      <>
-                        <div className={cn("text-[11px] font-black tracking-tighter", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</div>
-                        <div className="text-[9px] font-bold text-muted-foreground leading-none">{end}</div>
-                      </>
-                    )}
+                    <div className={cn("text-[11px] font-black tracking-tighter", isLive ? "text-rose-600 dark:text-rose-400" : "text-foreground")}>{start}</div>
+                    <div className="text-[9px] font-bold text-muted-foreground leading-none">{end}</div>
                   </div>
                 );
               })}
@@ -883,16 +866,10 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
 
             <div className="flex min-w-0 flex-1 relative">
               {DAYS.map((day, dayIndex) => (
-                <div key={day} className={cn(
-                  "flex flex-col border-r border-border last:border-r-0",
-                  density === "comfortable" ? "min-w-[200px]" : "min-w-[140px]"
-                )}>
-                  <div className={cn(
-                    "flex flex-col items-center justify-center border-b border-border bg-muted/20 sticky top-0 z-30 backdrop-blur-md",
-                    density === "comfortable" ? "h-20" : "h-16"
-                  )}>
+                <div key={day} className="flex flex-col border-r border-border last:border-r-0 min-w-[140px]">
+                  <div className="flex flex-col items-center justify-center border-b border-border bg-muted/20 sticky top-0 z-30 backdrop-blur-md h-16">
                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{day.substring(0, 3)}</span>
-                    <span className={cn("font-black text-foreground", density === "comfortable" ? "text-xl" : "text-base")}>{fmtDayNumber(weekDates[dayIndex])}</span>
+                    <span className="font-black text-foreground text-base">{fmtDayNumber(weekDates[dayIndex])}</span>
                   </div>
 
                   {timeKeys.map((key) => {
@@ -903,15 +880,10 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
                       <div
                         key={`${day}-${key}`}
                         className={cn(
-                          "border-b border-border transition-colors relative",
-                          density === "comfortable"
-                            ? "p-3"
-                            : "p-1.5",
+                          "border-b border-border transition-colors relative p-1.5",
                           !itemsExist 
                             ? "bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] dark:bg-[radial-gradient(#334155_1px,transparent_1px)] opacity-40" 
-                            : density === "comfortable"
-                              ? "bg-gradient-to-br from-muted/20 to-muted/30 hover:from-muted/40 hover:to-muted/50 transition-all"
-                              : "hover:bg-muted/5"
+                            : "hover:bg-muted/5"
                         )}
                         style={{ height: rowHeights[key] }}
                       >
@@ -919,173 +891,37 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
                           <div
                             className="grid content-start h-full"
                             style={{
-                              gridTemplateColumns: density === "comfortable"
-                                ? "repeat(auto-fill, minmax(280px, 1fr))"  // Auto-fit cards with min 280px
-                                : "repeat(4, minmax(0, 1fr))",
-                              gap: density === "comfortable" 
-                                ? `${COMFORTABLE_SLOT_GAP}px` 
-                                : `${rowGap}px`,
-                              gridAutoRows: density === "comfortable"
-                                ? `minmax(${COMFORTABLE_SLOT_HEIGHT}px, auto)`
-                                : `minmax(${capsuleMinHeight}px, auto)`,
+                              gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                              gap: `${rowGap}px`,
+                              gridAutoRows: `minmax(${capsuleMinHeight}px, auto)`,
                               gridAutoFlow: "dense",
                             }}
                           >
                             {groups.map((group) => {
                               const theme = getTheme(group.departmentName, group.departmentCode, group.codes[0]);
-                              const gradient = getComfortableCardGradient(group.departmentCode, group.codes[0]);
-                              const span = getCapsuleColSpan(group.codes.length);
+                              const bgColor = getBgColorOnly(theme);
+                              const textColor = getTextColorOnly(theme);
                               const isFocused = focusDept === "all" || group.departmentCode === focusDept;
-                              const adjustedSpan = density === "comfortable" ? Math.min(span, 2) : span;
+                              const adjustedSpan = getCapsuleColSpan(group.codes.length);
 
-                              // Comfortable mode: Show detailed card with improved layout
-                              if (density === "comfortable") {
-                                const displayCodes = group.codes.slice(0, 2);
-                                const remainingCodes = group.codes.length - displayCodes.length;
-                                const teacherName = group.items[0]?.teacherName || "Unknown";
-                                const displayItems = group.items.slice(0, 2);
-                                const remainingItems = group.items.length - displayItems.length;
-
-                                return (
-                                  <Tooltip key={`${day}-${key}-${group.departmentCode}`}>
-                                    <TooltipTrigger asChild>
-                                      <div
-                                        className={cn(
-                                          "relative overflow-hidden cursor-pointer group",
-                                          comfortableCardClasses,
-                                          !isFocused ? "opacity-20 grayscale blur-sm" : ""
-                                        )}
-                                        style={{ gridColumn: `span ${adjustedSpan} / span ${adjustedSpan}` }}
-                                      >
-                                        {/* Gradient background */}
-                                        <div className={cn("absolute inset-0 bg-gradient-to-br", gradient, "opacity-95 group-hover:opacity-100 transition-opacity")} />
-                                        
-                                        {/* Content - Clean hierarchical layout */}
-                                        <div className="relative z-10 p-4 h-full flex flex-col text-white">
-                                          {/* Row 1: Subject codes + Time */}
-                                          <div className="flex items-center justify-between mb-3">
-                                            <div className="flex flex-wrap gap-1.5">
-                                              {displayCodes.map((code, idx) => (
-                                                <Badge
-                                                  key={idx}
-                                                  className="bg-white/25 text-white border-white/40 text-[10px] font-bold px-2.5 py-0.5 rounded-md backdrop-blur-sm"
-                                                >
-                                                  {code}
-                                                </Badge>
-                                              ))}
-                                              {remainingCodes > 0 && (
-                                                <Badge className="bg-white/20 text-white border-white/30 text-[9px] font-bold px-2 py-0.5">
-                                                  +{remainingCodes}
-                                                </Badge>
-                                              )}
-                                            </div>
-                                            <div className="flex items-center gap-1.5 bg-white/25 backdrop-blur-md px-2.5 py-1 rounded-full">
-                                              <Clock className="h-3 w-3" />
-                                              <span className="text-[10px] font-bold">{key.split("-")[0]}</span>
-                                            </div>
-                                          </div>
-                                          
-                                          {/* Row 2: Department name (clean, single line) */}
-                                          <p className="text-[10px] font-bold uppercase tracking-wider opacity-90 mb-3 line-clamp-1">
-                                            {group.departmentName}
-                                          </p>
-                                          
-                                          {/* Row 3: Class details (max 2, with line clamp) */}
-                                          <div className="flex-1 space-y-2 mb-4">
-                                            {displayItems.map((item, idx) => (
-                                              <div key={idx} className="flex items-start gap-2">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-white/70 mt-1.5 flex-shrink-0" />
-                                                <div className="flex-1 min-w-0">
-                                                  <p className="text-[11px] font-bold text-white leading-snug line-clamp-2">
-                                                    {item.className}
-                                                  </p>
-                                                  {item.subjectName && (
-                                                    <p className="text-[9px] text-white/80 leading-tight line-clamp-1 mt-0.5">
-                                                      {item.subjectName}
-                                                    </p>
-                                                  )}
-                                                </div>
-                                              </div>
-                                            ))}
-                                            {remainingItems > 0 && (
-                                              <div className="flex items-center gap-2 pl-3.5">
-                                                <div className="h-1.5 w-1.5 rounded-full bg-white/50 mt-1.5" />
-                                                <p className="text-[9px] text-white/70 font-medium">
-                                                  +{remainingItems} more session{remainingItems > 1 ? "s" : ""}
-                                                </p>
-                                              </div>
-                                            )}
-                                          </div>
-                                          
-                                          {/* Row 4: Teacher info with avatar */}
-                                          <div className="flex items-center gap-2.5 pt-3 border-t border-white/25">
-                                            <div className="h-8 w-8 rounded-full bg-white/25 backdrop-blur-md flex items-center justify-center flex-shrink-0 shadow-sm">
-                                              <span className="text-[10px] font-bold">{getTeacherInitials(teacherName)}</span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                              <p className="text-[10px] font-bold text-white line-clamp-1">
-                                                {teacherName}
-                                              </p>
-                                              <p className="text-[8px] text-white/70 font-medium">
-                                                {group.items.length} session{group.items.length > 1 ? "s" : ""}
-                                              </p>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent className="w-72 rounded-xl border border-border/50 bg-card p-4 shadow-2xl backdrop-blur-xl z-[100]">
-                                      <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                          <Badge variant="outline" className="text-[9px] font-black uppercase tracking-widest border-primary/20 bg-primary/5 text-primary">
-                                            {group.departmentCode}
-                                          </Badge>
-                                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                                            <Clock className="h-3 w-3" />
-                                            <span className="text-[10px] font-bold uppercase tracking-wider">{key.replace("-", " - ")}</span>
-                                          </div>
-                                        </div>
-                                        <div>
-                                          <p className="text-sm font-bold tracking-tight text-foreground">{group.departmentName}</p>
-                                          <p className="text-[10px] font-medium text-muted-foreground mt-0.5">
-                                            {group.items.length} active session{group.items.length > 1 ? "s" : ""}
-                                          </p>
-                                        </div>
-                                        <div className="pt-3 border-t border-border/50 space-y-3">
-                                          {group.items.map((item, idx) => (
-                                            <div key={idx} className="flex flex-col">
-                                              <div className="flex items-center gap-2 mb-1">
-                                                <Badge variant="secondary" className="text-[9px] font-bold">{item.subjectCode}</Badge>
-                                                <span className="text-[10px] font-bold text-foreground">{item.className}</span>
-                                              </div>
-                                              <div className="flex items-center gap-1.5 ml-1">
-                                                <User className="h-3 w-3 text-muted-foreground" />
-                                                <span className="text-[9px] font-medium text-muted-foreground">{item.teacherName}</span>
-                                              </div>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </div>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                );
-                              }
-
-                              // Compact mode: Show simple capsule (existing implementation)
+                              // Compact mode: Show perfectly flat capsule
                               return (
                                 <Tooltip key={`${day}-${key}-${group.departmentCode}`}>
                                   <TooltipTrigger asChild>
                                     <div
                                       className={cn(
-                                        "inline-flex min-h-0 w-fit max-w-full cursor-pointer items-center justify-start rounded-xl border-l-[5px] font-black tracking-tight shadow-md transition-all duration-300 border-r-2 border-t-2 border-b-2",
+                                        "inline-flex min-h-0 w-fit max-w-full cursor-pointer items-center justify-start rounded-md font-bold tracking-tight transition-all duration-200",
                                         capsulePaddingClass,
                                         capsuleTextClass,
-                                        theme,
-                                        !isFocused ? "opacity-15 grayscale-[0.9] scale-[0.95] blur-[1px] border-border" : "hover:scale-105 hover:shadow-xl hover:z-20 hover:-translate-y-0.5"
+                                        bgColor,
+                                        textColor,
+                                        !isFocused ? "opacity-10 grayscale blur-[2px]" : "hover:brightness-110"
                                       )}
                                       style={{ gridColumn: `span ${adjustedSpan} / span ${adjustedSpan}` }}
                                     >
-                                      <div className="whitespace-normal break-words leading-tight">{group.codes.join(" · ")}</div>
+                                      <div className="whitespace-nowrap overflow-hidden text-ellipsis leading-none">
+                                        {group.codes.join(" · ")}
+                                      </div>
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent className="w-64 rounded-xl border border-border/50 bg-card p-3 shadow-xl backdrop-blur-xl z-[100]">
@@ -1136,7 +972,7 @@ export const WeeklyScheduleDensity = React.memo(function WeeklyScheduleDensity()
           </div>
           )}
         </div>
-      </section>
+      </div>
     </TooltipProvider>
   );
 });
