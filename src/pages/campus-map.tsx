@@ -364,6 +364,14 @@ const InfoCard = ({
 }) => {
   const categoryColor = CATEGORIES[building.category].color;
   
+  const getDirectionsUrl = (b: BuildingData) => {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(b.name + ' Campus Building')}`;
+  };
+
+  const handleGetDirections = () => {
+    window.open(getDirectionsUrl(building), '_blank', 'noopener,noreferrer');
+  };
+  
   return (
     <motion.div
       initial={{ opacity: 0, x: 100 }}
@@ -373,6 +381,7 @@ const InfoCard = ({
       role="dialog"
       aria-label={`${building.name} information`}
       aria-modal="true"
+      onClick={(e) => e.stopPropagation()}
     >
       <div className="p-6">
         <div className="flex justify-between items-start mb-4">
@@ -447,7 +456,11 @@ const InfoCard = ({
 
         {/* Action Buttons */}
         <div className="flex gap-2 pt-4 border-t border-gray-100">
-          <Button className="flex-1 bg-black text-white font-bold py-2.5 rounded-xl hover:bg-gray-800 transition-all">
+          <Button 
+            className="flex-1 bg-black text-white font-bold py-2.5 rounded-xl hover:bg-gray-800 transition-all"
+            onClick={handleGetDirections}
+            aria-label={`Get directions to ${building.name}`}
+          >
             <Navigation className="w-4 h-4 mr-2" />
             Get Directions
           </Button>
@@ -493,19 +506,42 @@ const CampusMap: React.FC = () => {
     if (viewParam) {
       try {
         const parsed = JSON.parse(viewParam) as ViewportState;
-        setView(parsed);
+        // Clamp values safely
+        const clampedX = Math.max(VIEWPORT_LIMITS.PAN.minX, Math.min(VIEWPORT_LIMITS.PAN.maxX, Number(parsed.x) || 0));
+        const clampedY = Math.max(VIEWPORT_LIMITS.PAN.minY, Math.min(VIEWPORT_LIMITS.PAN.maxY, Number(parsed.y) || 0));
+        const clampedScale = Math.max(VIEWPORT_LIMITS.ZOOM.min, Math.min(VIEWPORT_LIMITS.ZOOM.max, Number(parsed.scale) || 1));
+        
+        setView({ x: clampedX, y: clampedY, scale: clampedScale });
       } catch {
         // Ignore invalid
       }
     }
   }, [location.search]);
 
+  // Debounced navigation
   useEffect(() => {
-    const params = new URLSearchParams();
-    if (selectedId) params.set('building', selectedId.toString());
-    params.set('view', JSON.stringify(view));
-    navigate(`/campus-map?${params.toString()}`, { replace: true });
-  }, [selectedId, view, navigate]);
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams();
+      if (selectedId) params.set('building', selectedId.toString());
+      
+      // Simplify view for URL to avoid micro-updates noise
+      const simplifiedView = {
+        x: Math.round(view.x),
+        y: Math.round(view.y),
+        scale: Math.round(view.scale * 100) / 100
+      };
+      
+      const viewString = JSON.stringify(simplifiedView);
+      const currentParams = new URLSearchParams(location.search);
+      
+      if (params.get('building') !== currentParams.get('building') || viewString !== currentParams.get('view')) {
+        params.set('view', viewString);
+        navigate(`/campus-map?${params.toString()}`, { replace: true });
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [selectedId, view, navigate, location.search]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -522,7 +558,14 @@ const CampusMap: React.FC = () => {
         return;
       }
 
-      if (document.activeElement?.tagName === 'INPUT') return;
+      // expert fix: ignore if focused on interactive element
+      const interactiveSelector = 'input, textarea, select, [contenteditable="true"], button, a, [role="button"], [role="checkbox"], [tabindex]:not([tabindex="-1"])';
+      if (document.activeElement?.matches(interactiveSelector)) {
+        // Allow arrow keys/WASD if it's NOT a text input (e.g. focus on a badge/button)
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') {
+            return;
+        }
+      }
 
       const PAN_SPEED = 80 / view.scale;
       
@@ -611,6 +654,8 @@ const CampusMap: React.FC = () => {
 
   // Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
+    // Only start drag if clicking the main background or SVG itself
+    if (e.target !== e.currentTarget && !(e.target instanceof SVGElement)) return;
     setIsDragging(true);
     setStartPos({ x: e.clientX - view.x, y: e.clientY - view.y });
   };
@@ -643,7 +688,7 @@ const CampusMap: React.FC = () => {
     <div className="flex w-full h-screen bg-[#F0F0F0] overflow-hidden" role="application" aria-label="Campus Map">
       
       {/* LEFT SIDEBAR */}
-      <aside className="w-72 bg-white border-r border-[#D1D1CA] flex flex-col z-20 shadow-sm">
+      <aside className="w-72 bg-white border-r border-[#D1D1CA] flex flex-col z-20 shadow-sm" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="p-5 border-b border-gray-200">
           <div className="flex items-center gap-3 mb-3">
@@ -681,13 +726,19 @@ const CampusMap: React.FC = () => {
                 key={cat}
                 variant={activeCategories.includes(cat) ? 'default' : 'outline'}
                 className={cn(
-                  "text-[9px] font-bold cursor-pointer transition-all px-2 py-1",
+                  "text-[9px] font-bold cursor-pointer transition-all px-2 py-1 outline-none focus-visible:ring-2 focus-visible:ring-black",
                   activeCategories.includes(cat) 
                     ? "text-white" 
                     : "bg-white text-gray-500 hover:bg-gray-100"
                 )}
                 style={activeCategories.includes(cat) ? { backgroundColor: CATEGORIES[cat].color } : {}}
                 onClick={() => handleCategoryToggle(cat)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleCategoryToggle(cat);
+                  }
+                }}
                 role="checkbox"
                 aria-checked={activeCategories.includes(cat)}
                 tabIndex={0}
@@ -712,15 +763,21 @@ const CampusMap: React.FC = () => {
               <Card
                 key={b.id}
                 className={cn(
-                  "cursor-pointer transition-all border-2 hover:shadow-md",
+                  "cursor-pointer transition-all border-2 hover:shadow-md outline-none focus-visible:ring-2 focus-visible:ring-black",
                   selectedId === b.id
                     ? 'border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
                     : 'border-gray-200 hover:border-gray-300'
                 )}
                 style={selectedId === b.id ? { backgroundColor: `${CATEGORIES[b.category].color}20` } : {}}
                 onClick={() => setSelectedId(b.id)}
-                role="listitem"
-                aria-selected={selectedId === b.id}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setSelectedId(b.id);
+                  }
+                }}
+                role="button"
+                aria-pressed={selectedId === b.id}
                 tabIndex={0}
               >
                 <CardContent className="p-3">
@@ -777,7 +834,12 @@ const CampusMap: React.FC = () => {
           );
           setView(v => ({ ...v, scale: newScale }));
         }}
-        onClick={() => setSelectedId(null)}
+        onClick={(e) => {
+            // Only deselect if clicking exactly the main container background
+            if (e.target === e.currentTarget) {
+                setSelectedId(null);
+            }
+        }}
         role="region"
         aria-label="Interactive campus map"
       >
@@ -785,7 +847,7 @@ const CampusMap: React.FC = () => {
         <div className="absolute inset-0 flex items-center justify-center">
           <svg
             viewBox="-700 -600 1400 1200"
-            className="w-full h-full"
+            className="w-full h-full pointer-events-none"
             style={{ background: `radial-gradient(circle at center, #F0F0F0 0%, #E8E8E8 100%)` }}
           >
             <defs>
@@ -794,7 +856,7 @@ const CampusMap: React.FC = () => {
               </pattern>
             </defs>
 
-            <g transform={`translate(${view.x}, ${view.y}) scale(${view.scale})`}>
+            <g transform={`translate(${view.x}, ${view.y}) scale(${view.scale})`} className="pointer-events-auto">
               <rect x="-5000" y="-5000" width="10000" height="10000" fill="url(#isoGrid)" />
               <Environment />
               
@@ -822,7 +884,7 @@ const CampusMap: React.FC = () => {
         </AnimatePresence>
 
         {/* CONTROLS */}
-        <div className="absolute bottom-6 left-32 flex flex-col gap-2 z-20">
+        <div className="absolute bottom-6 left-32 flex flex-col gap-2 z-20" onClick={(e) => e.stopPropagation()}>
           <div className="bg-white border-2 border-black rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col overflow-hidden">
             <button onClick={handleZoomIn} className="p-3 hover:bg-[#F4CE14] transition-colors border-b-2 border-black" aria-label="Zoom in">
               <Plus size={20} />
@@ -841,9 +903,13 @@ const CampusMap: React.FC = () => {
         </div>
 
         {/* WIDGETS */}
-        <ScaleBar scale={view.scale} />
-        <MiniMap view={view} onViewChange={setView} />
-        <CompassWidget />
+        <div onClick={(e) => e.stopPropagation()} className="pointer-events-none">
+            <div className="pointer-events-auto">
+                <ScaleBar scale={view.scale} />
+                <MiniMap view={view} onViewChange={setView} />
+                <CompassWidget />
+            </div>
+        </div>
 
         {/* KEYBOARD HELP MODAL */}
         <AnimatePresence>
