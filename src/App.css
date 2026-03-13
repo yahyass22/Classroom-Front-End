@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;700&family=Spline+Sans:wght@400;500;600&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
@@ -219,6 +220,69 @@ svg[data-testid="refine-logo"] {
 
 .class-view {
   @apply w-full max-w-5xl mx-auto;
+}
+
+/* ============================================
+   CAMPUS MAP EXPERIENCE
+   ============================================ */
+
+.campus-map-page {
+  --campus-ink: #1f2a33;
+  --campus-muted: #7b8a93;
+  --campus-sand: #f6efe3;
+  --campus-cream: #fcf7ee;
+  --campus-terracotta: #d3875f;
+  --campus-border: rgba(200, 186, 168, 0.6);
+  --campus-shadow: 0 25px 60px rgba(24, 28, 32, 0.2);
+  --campus-shadow-sm: 0 10px 20px rgba(24, 28, 32, 0.12);
+  font-family: "Spline Sans", "Segoe UI", sans-serif;
+  color: var(--campus-ink);
+}
+
+.campus-map-display {
+  font-family: "Fraunces", "Times New Roman", serif;
+}
+
+.campus-map-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(238, 214, 188, 0.6), transparent 50%),
+    radial-gradient(circle at 80% 10%, rgba(205, 229, 235, 0.55), transparent 45%),
+    linear-gradient(135deg, #f9f3ea 0%, #f4e7d6 50%, #edf1f4 100%);
+}
+
+.campus-map-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(90deg, rgba(215, 205, 192, 0.35) 1px, transparent 1px),
+    linear-gradient(rgba(215, 205, 192, 0.35) 1px, transparent 1px);
+  background-size: 90px 90px;
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.campus-map-glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 50% 50%, rgba(211, 135, 95, 0.25), transparent 55%);
+  filter: blur(80px);
+  pointer-events: none;
+}
+
+.campus-map-canvas {
+  background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.9), rgba(245, 234, 220, 0.85) 45%, rgba(237, 235, 230, 0.9) 100%);
+  box-shadow: none;
+  border: none;
+}
+
+.campus-chip {
+  border-radius: 999px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(222, 210, 194, 0.8);
+  box-shadow: var(--campus-shadow-sm);
 }
 
 /* ============================================

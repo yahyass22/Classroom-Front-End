@@ -15,7 +15,7 @@ import { ThemeProvider } from "./components/refine-ui/theme/theme-provider";
 import { dataProvider } from "./providers/data";
 import { queryClient } from "@/lib/queryClient";
 import { authProvider } from "./providers/auth";
-import {BookOpen, Clock, GraduationCap, Home, MessageSquare, Loader2} from "lucide-react";
+import {BookOpen, Clock, GraduationCap, Home, MessageSquare, Loader2, Navigation} from "lucide-react";
 import {Layout} from "@/components/refine-ui/layout/layout.tsx";
 
 // Lazy load pages
@@ -30,6 +30,8 @@ const DiscussionsListPage = lazy(() => import("@/pages/discussions/list.tsx"));
 const DiscussionsShowPage = lazy(() => import("@/pages/discussions/show.tsx"));
 const DiscussionsNewPage = lazy(() => import("@/pages/discussions/new.tsx"));
 const SchedulePage = lazy(() => import("@/pages/schedule.tsx"));
+const CampusMap = lazy(() => import("@/pages/campus-map.tsx"));
+const ComingSoon = lazy(() => import("@/pages/coming-soon.tsx"));
 
 // Page Loading Component
 function PageLoading() {
@@ -87,6 +89,11 @@ function App() {
                       meta: {label: 'Discussions' , icon: <MessageSquare /> }
                   },
                   {
+                      name: 'campus-map',
+                      list: '/campus-map',
+                      meta: { label: 'Campus Map (Soon)', icon: <Navigation /> }
+                  },
+                  {
                       name: 'subjects',
                       list: '/subjects',
                       create: '/subjects/create',
@@ -114,6 +121,7 @@ function App() {
                     }>
                         <Route path = "/" element={<Dashboard/>} />
                         <Route path = "/schedule" element={<SchedulePage/>} />
+                        <Route path = "/campus-map" element={<ComingSoon featureName="Campus Map" />} />
                         <Route path = "discussions">
                             <Route index element ={<DiscussionsListPage />} />
                             <Route path = "new" element ={<DiscussionsNewPage/>} />
